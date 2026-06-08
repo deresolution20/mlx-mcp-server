@@ -88,7 +88,7 @@ class LLMClient:
             completion_tokens=usage.get("completion_tokens", 0),
             total_tokens=usage.get("total_tokens", 0),
             elapsed_seconds=elapsed,
-            model=data.get("model", model),
+            model=data.get("model") or model,  # oMLX may return "" — fall back to resolved model
         )
 
     async def list_models(self) -> list[ModelInfo]:
