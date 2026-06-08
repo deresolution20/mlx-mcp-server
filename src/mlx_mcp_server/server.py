@@ -29,9 +29,11 @@ async def chat(
     top_k: int = 0,
 ) -> str:
     """Send a message to the local LLM and return the response with token usage."""
+    # Suppress Qwen3 chain-of-thought by default; pass system_prompt to override
+    effective_system = system_prompt or "Respond directly and concisely. Do not show your reasoning or thinking steps."
     result = await _client.chat(
         message=message,
-        system_prompt=system_prompt,
+        system_prompt=effective_system,
         temperature=temperature,
         max_tokens=max_tokens,
         top_p=top_p,
