@@ -1,5 +1,4 @@
 import json
-import sys
 from typing import Literal
 
 from mcp.server.fastmcp import FastMCP
