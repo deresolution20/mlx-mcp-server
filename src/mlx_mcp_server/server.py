@@ -51,9 +51,13 @@ async def quick_test(
     test_type: Literal["hello", "math", "creative", "code_review"],
 ) -> str:
     """Run a predefined diagnostic prompt to sanity-check the loaded model."""
-    # Prepend /no_think to suppress Qwen3 chain-of-thought so tokens go to the actual answer
-    prompt = "/no_think " + _QUICK_TEST_PROMPTS[test_type]
-    result = await _client.chat(message=prompt, temperature=0.7, max_tokens=1024)
+    prompt = _QUICK_TEST_PROMPTS[test_type]
+    result = await _client.chat(
+        message=prompt,
+        system_prompt="Respond directly and concisely. Do not show your reasoning or thinking steps.",
+        temperature=0.7,
+        max_tokens=1024,
+    )
     tok_per_sec = (
         result.completion_tokens / result.elapsed_seconds
         if result.elapsed_seconds > 0
