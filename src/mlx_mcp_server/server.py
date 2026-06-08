@@ -29,9 +29,15 @@ async def chat(
     top_k: int = 0,
 ) -> str:
     """Send a message to the local LLM and return the response with token usage."""
+    _NO_THINK = (
+        "You are a direct, concise assistant. "
+        "Output ONLY your final answer. "
+        "Never use phrases like 'Here\\'s a thinking process', 'Let me analyze', or numbered planning steps. "
+        "Never explain your reasoning — just answer."
+    )
     result = await _client.chat(
         message=message,
-        system_prompt=system_prompt,
+        system_prompt=system_prompt or _NO_THINK,
         temperature=temperature,
         max_tokens=max_tokens,
         top_p=top_p,
@@ -54,8 +60,15 @@ async def quick_test(
 ) -> str:
     """Run a predefined diagnostic prompt to sanity-check the loaded model."""
     prompt = _QUICK_TEST_PROMPTS[test_type]
+    _NO_THINK = (
+        "You are a direct, concise assistant. "
+        "Output ONLY your final answer. "
+        "Never use phrases like 'Here\\'s a thinking process', 'Let me analyze', or numbered planning steps. "
+        "Never explain your reasoning — just answer."
+    )
     result = await _client.chat(
         message=prompt,
+        system_prompt=_NO_THINK,
         temperature=0.7,
         max_tokens=1024,
         enable_thinking=False,
