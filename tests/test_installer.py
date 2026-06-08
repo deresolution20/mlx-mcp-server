@@ -76,6 +76,16 @@ def test_install_claude_code(tmp_path, monkeypatch):
     assert "mlx" in data["mcpServers"]
 
 
+def test_install_omits_default_model_when_empty(tmp_path, monkeypatch):
+    config_file = tmp_path / "claude_desktop_config.json"
+    monkeypatch.setattr("mlx_mcp_server.installer._claude_desktop_config_path", lambda: config_file)
+
+    install(claude_code=False, base_url="http://localhost:8080", model="", api_key="", dry_run=False)
+
+    data = json.loads(config_file.read_text())
+    assert "MLX_DEFAULT_MODEL" not in data["mcpServers"]["mlx"]["env"]
+
+
 def test_install_with_api_key(tmp_path, monkeypatch):
     config_file = tmp_path / "claude_desktop_config.json"
     monkeypatch.setattr("mlx_mcp_server.installer._claude_desktop_config_path", lambda: config_file)

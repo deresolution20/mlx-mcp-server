@@ -32,8 +32,9 @@ def install(*, claude_code: bool, base_url: str, model: str, api_key: str, dry_r
 
     env: dict[str, str] = {
         "MLX_BASE_URL": base_url,
-        "MLX_DEFAULT_MODEL": model,
     }
+    if model:
+        env["MLX_DEFAULT_MODEL"] = model
     if api_key:
         env["MLX_API_KEY"] = api_key
 

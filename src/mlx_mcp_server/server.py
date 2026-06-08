@@ -37,11 +37,12 @@ async def chat(
         top_p=top_p,
         top_k=top_k,
     )
+    model_tag = f" | Model: {result.model}" if result.model else ""
     return (
         f"{result.content}\n\n"
         f"---\n"
         f"Tokens: {result.prompt_tokens} prompt + {result.completion_tokens} completion"
-        f" = {result.total_tokens} total | {result.elapsed_seconds:.2f}s"
+        f" = {result.total_tokens} total | {result.elapsed_seconds:.2f}s{model_tag}"
     )
 
 
@@ -57,11 +58,13 @@ async def quick_test(
         if result.elapsed_seconds > 0
         else 0.0
     )
+    model_tag = f"Model: {result.model} | " if result.model else ""
     return (
         f"Test: {test_type}\n"
         f"Prompt: {prompt}\n\n"
         f"Response:\n{result.content}\n\n"
         f"---\n"
+        f"{model_tag}"
         f"Latency: {result.elapsed_seconds:.2f}s | "
         f"Completion tokens: {result.completion_tokens} | "
         f"Speed: {tok_per_sec:.1f} tok/s"
@@ -131,7 +134,7 @@ Set `MLX_BASE_URL=http://localhost:11434` and `MLX_DEFAULT_MODEL=mistral`
 | Variable | Default | Notes |
 |----------|---------|-------|
 | MLX_BASE_URL | http://localhost:8080 | Backend URL |
-| MLX_DEFAULT_MODEL | (empty) | Required for Ollama |
+| MLX_DEFAULT_MODEL | (empty) | Optional — auto-detected from /v1/models if not set |
 | MLX_API_KEY | (empty) | Optional, for secured backends |
 | MLX_TIMEOUT | 30 | Request timeout in seconds |
 """
@@ -161,7 +164,7 @@ def main() -> None:
         "--model",
         default="",
         metavar="NAME",
-        help="Value for MLX_DEFAULT_MODEL (required for Ollama)",
+        help="Value for MLX_DEFAULT_MODEL (optional — auto-detected from /v1/models if not set)",
     )
     install_parser.add_argument(
         "--api-key",

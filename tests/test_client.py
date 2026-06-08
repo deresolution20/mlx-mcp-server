@@ -104,6 +104,77 @@ async def test_list_models_empty(client):
     assert models == []
 
 @respx.mock
+async def test_chat_auto_detects_model_when_not_configured(client):
+    """When default_model is empty, client queries /v1/models and uses the first result."""
+    respx.get("http://localhost:8080/v1/models").mock(
+        return_value=httpx.Response(200, json={"data": [{"id": "auto-detected-model"}]})
+    )
+    respx.post("http://localhost:8080/v1/chat/completions").mock(
+        return_value=httpx.Response(200, json={
+            "choices": [{"message": {"content": "Hi"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 5, "completion_tokens": 1, "total_tokens": 6},
+            "model": "auto-detected-model",
+        })
+    )
+    result = await client.chat("Hello")
+    assert result.model == "auto-detected-model"
+
+
+@respx.mock
+async def test_chat_auto_detect_includes_model_in_payload(client):
+    """Auto-detected model is sent in the request payload."""
+    respx.get("http://localhost:8080/v1/models").mock(
+        return_value=httpx.Response(200, json={"data": [{"id": "detected-model"}]})
+    )
+    chat_route = respx.post("http://localhost:8080/v1/chat/completions").mock(
+        return_value=httpx.Response(200, json={
+            "choices": [{"message": {"content": "Hi"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 5, "completion_tokens": 1, "total_tokens": 6},
+        })
+    )
+    await client.chat("Hello")
+    import json as _json
+    body = _json.loads(chat_route.calls[0].request.content)
+    assert body["model"] == "detected-model"
+
+
+@respx.mock
+async def test_chat_caches_auto_detected_model(client):
+    """/v1/models is only queried once — subsequent chat calls use the cached model."""
+    models_route = respx.get("http://localhost:8080/v1/models").mock(
+        return_value=httpx.Response(200, json={"data": [{"id": "cached-model"}]})
+    )
+    respx.post("http://localhost:8080/v1/chat/completions").mock(
+        return_value=httpx.Response(200, json={
+            "choices": [{"message": {"content": "Hi"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 5, "completion_tokens": 1, "total_tokens": 6},
+        })
+    )
+    await client.chat("First message")
+    await client.chat("Second message")
+    assert models_route.call_count == 1
+
+
+@respx.mock
+async def test_chat_graceful_when_model_detection_fails(client):
+    """If /v1/models returns an error, chat proceeds without a model field."""
+    respx.get("http://localhost:8080/v1/models").mock(
+        return_value=httpx.Response(500, text="Server Error")
+    )
+    chat_route = respx.post("http://localhost:8080/v1/chat/completions").mock(
+        return_value=httpx.Response(200, json={
+            "choices": [{"message": {"content": "Hi"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 5, "completion_tokens": 1, "total_tokens": 6},
+        })
+    )
+    result = await client.chat("Hello")
+    import json as _json
+    body = _json.loads(chat_route.calls[0].request.content)
+    assert "model" not in body
+    assert result.content == "Hi"
+
+
+@respx.mock
 async def test_health_check_ok_via_health_endpoint(client):
     # /health works without auth (oMLX-style)
     respx.get("http://localhost:8080/health").mock(

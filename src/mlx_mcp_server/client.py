@@ -1,5 +1,5 @@
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import httpx
 
@@ -13,6 +13,7 @@ class ChatResponse:
     completion_tokens: int
     total_tokens: int
     elapsed_seconds: float
+    model: str = ""
 
 
 @dataclass
@@ -23,6 +24,8 @@ class ModelInfo:
 class LLMClient:
     def __init__(self, config: Config) -> None:
         self.config = config
+        self._resolved_model: str | None = None
+        self._model_resolved: bool = False
         headers: dict[str, str] = {}
         if config.api_key:
             headers["Authorization"] = f"Bearer {config.api_key}"
@@ -31,6 +34,19 @@ class LLMClient:
             headers=headers,
             timeout=config.timeout,
         )
+
+    async def _get_model(self) -> str:
+        """Return model to use: explicit config > cached auto-detect > live /v1/models query."""
+        if self.config.default_model:
+            return self.config.default_model
+        if not self._model_resolved:
+            try:
+                models = await self.list_models()
+                self._resolved_model = models[0].id if models else None
+            except Exception:
+                self._resolved_model = None  # backend unreachable or doesn't support listing
+            self._model_resolved = True
+        return self._resolved_model or ""
 
     async def chat(
         self,
@@ -54,8 +70,10 @@ class LLMClient:
         }
         if top_k > 0:
             payload["top_k"] = top_k
-        if self.config.default_model:
-            payload["model"] = self.config.default_model
+
+        model = await self._get_model()
+        if model:
+            payload["model"] = model
 
         start = time.monotonic()
         resp = await self._http.post("/v1/chat/completions", json=payload)
@@ -70,6 +88,7 @@ class LLMClient:
             completion_tokens=usage.get("completion_tokens", 0),
             total_tokens=usage.get("total_tokens", 0),
             elapsed_seconds=elapsed,
+            model=data.get("model", model),
         )
 
     async def list_models(self) -> list[ModelInfo]:
