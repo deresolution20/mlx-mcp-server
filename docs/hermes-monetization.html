@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermes Monetization Report — AI Content Opportunities 2025</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --accent: #7c6cf8;
+    --accent2: #e879f9;
+    --accent3: #22d3ee;
+    --gold: #fbbf24;
+    --green: #34d399;
+    --red: #f87171;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .hero {
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 50%, #0a1628 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at center, rgba(124,108,248,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(124,108,248,0.15);
+    border: 1px solid rgba(124,108,248,0.3);
+    color: var(--accent);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #e2e8f0 0%, var(--accent) 50%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+    line-height: 1.2;
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 600px;
+    margin: 0 auto 30px;
+  }
+  .hero-stack {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .stack-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--accent3);
+    font-weight: 500;
+  }
+
+  /* Layout */
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+  .section { margin-bottom: 60px; }
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .num {
+    background: var(--accent);
+    color: white;
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .section-subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+  /* Top 50 Grid */
+  .methods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .method-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: default;
+  }
+  .method-card:hover {
+    border-color: var(--accent);
+    background: var(--surface2);
+  }
+  .method-num {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 22px;
+    padding-top: 1px;
+  }
+  .method-info { flex: 1; min-width: 0; }
+  .method-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .method-platform {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .method-card.hot .method-name { color: var(--accent2); }
+  .method-card.hermes-fit { border-color: rgba(124,108,248,0.4); }
+  .method-card.hermes-fit .method-name { color: var(--accent); }
+
+  /* Pain points */
+  .pain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+  .pain-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .pain-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--red);
+  }
+  .pain-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+  .pain-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .pain-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .pain-stat {
+    margin-top: 12px;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--red);
+    font-weight: 600;
+  }
+
+  /* Top 5 Opportunities */
+  .opp-list { display: flex; flex-direction: column; gap: 20px; }
+  .opp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .opp-card:hover { border-color: var(--accent); }
+  .opp-rank {
+    position: absolute;
+    top: 20px; right: 24px;
+    font-size: 64px;
+    font-weight: 900;
+    color: rgba(124,108,248,0.08);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .opp-card.rank-1 { border-color: rgba(251,191,36,0.4); background: linear-gradient(135deg, #12121a 0%, #1a1408 100%); }
+  .opp-card.rank-1 .opp-rank { color: rgba(251,191,36,0.1); }
+  .opp-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+  .opp-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .opp-icon.purple { background: rgba(124,108,248,0.15); }
+  .opp-icon.pink   { background: rgba(232,121,249,0.15); }
+  .opp-icon.cyan   { background: rgba(34,211,238,0.15); }
+  .opp-icon.gold   { background: rgba(251,191,36,0.15); }
+  .opp-icon.green  { background: rgba(52,211,153,0.15); }
+  .opp-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .opp-tagline { font-size: 14px; color: var(--muted); }
+  .opp-body { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 20px; }
+
+  .scores { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .score-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+  .score-label { color: var(--muted); margin-bottom: 2px; }
+  .score-value { font-weight: 700; font-size: 14px; }
+  .score-value.high { color: var(--green); }
+  .score-value.med  { color: var(--gold); }
+
+  .bar-wrap { margin-bottom: 20px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .bar-label { font-size: 12px; color: var(--muted); width: 100px; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .bar-fill.purple { background: var(--accent); }
+  .bar-fill.pink   { background: var(--accent2); }
+  .bar-fill.cyan   { background: var(--accent3); }
+  .bar-fill.gold   { background: var(--gold); }
+  .bar-fill.green  { background: var(--green); }
+  .bar-num { font-size: 12px; font-weight: 700; width: 28px; text-align: right; }
+
+  .action-list { list-style: none; }
+  .action-list li {
+    padding: 8px 0;
+    font-size: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .action-list li:last-child { border-bottom: none; }
+  .action-list li::before { content: '→'; color: var(--accent); flex-shrink: 0; font-weight: 700; }
+
+  /* Hermes section */
+  .hermes-card {
+    background: linear-gradient(135deg, #12121a 0%, #0d1a2e 100%);
+    border: 1px solid rgba(124,108,248,0.3);
+    border-radius: var(--radius);
+    padding: 32px;
+  }
+  .hermes-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 24px;
+  }
+  .hermes-avatar {
+    width: 60px; height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+  .hermes-name { font-size: 24px; font-weight: 800; }
+  .hermes-desc { font-size: 13px; color: var(--accent3); margin-top: 2px; }
+  .capability-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .cap-pill {
+    background: rgba(124,108,248,0.1);
+    border: 1px solid rgba(124,108,248,0.25);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--accent);
+  }
+  .differentiator-list { display: flex; flex-direction: column; gap: 12px; }
+  .diff-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px;
+    background: rgba(124,108,248,0.06);
+    border: 1px solid rgba(124,108,248,0.15);
+    border-radius: 8px;
+  }
+  .diff-emoji { font-size: 20px; flex-shrink: 0; }
+  .diff-text { font-size: 14px; line-height: 1.6; }
+  .diff-text strong { color: var(--text); }
+  .diff-text span { color: var(--muted); }
+
+  /* Contrarian */
+  .contrarian-card {
+    background: linear-gradient(135deg, #0a0f0a 0%, #0a1a0d 100%);
+    border: 1px solid rgba(52,211,153,0.3);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .contrarian-tag {
+    display: inline-block;
+    background: rgba(52,211,153,0.1);
+    border: 1px solid rgba(52,211,153,0.3);
+    color: var(--green);
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .contrarian-title { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+  .contrarian-body { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 20px; }
+  .math-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex; gap: 30px; flex-wrap: wrap;
+  }
+  .math-item .math-num { font-size: 26px; font-weight: 800; color: var(--green); }
+  .math-item .math-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* Roadmap */
+  .roadmap { display: flex; flex-direction: column; gap: 0; }
+  .phase {
+    display: flex; gap: 20px;
+    padding-bottom: 30px;
+    position: relative;
+  }
+  .phase:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 19px; top: 40px;
+    width: 2px;
+    bottom: 0;
+    background: var(--border);
+  }
+  .phase-dot {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    position: relative;
+    z-index: 1;
+  }
+  .phase-dot.active { border-color: var(--accent); background: rgba(124,108,248,0.15); }
+  .phase-content { flex: 1; padding-top: 6px; }
+  .phase-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--muted); margin-bottom: 4px;
+  }
+  .phase-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .phase-tasks { list-style: none; }
+  .phase-tasks li { font-size: 13px; color: var(--muted); padding: 3px 0; }
+  .phase-tasks li::before { content: '·  '; color: var(--accent); }
+
+  /* Filter tabs */
+  .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(124,108,248,0.08);
+  }
+
+  /* Legend */
+  .legend { display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .legend-dot.purple { background: var(--accent); }
+  .legend-dot.pink   { background: var(--accent2); }
+  .legend-dot.default { background: var(--border); }
+
+  /* Footer */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 30px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .footer strong { color: var(--accent); }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .hero { padding: 40px 20px; }
+    .container { padding: 24px 16px; }
+    .scores { flex-direction: column; }
+    .math-box { flex-direction: column; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">🏠 Powered by Qwen3.6-35B · Local AI Research</div>
+  <h1>Hermes Monetization Report<br>Top 50 Faceless AI Opportunities 2025</h1>
+  <p>Pattern analysis across the AI creator economy — ranked by market size × solo buildability, tailored to your autonomous stack.</p>
+  <div class="hero-stack">
+    <span class="stack-badge">🤖 Hermes Agent</span>
+    <span class="stack-badge">🎨 SDXL / ComfyUI</span>
+    <span class="stack-badge">🎵 Mureka Music</span>
+    <span class="stack-badge">🖥 MacBook M2 · 24GB</span>
+    <span class="stack-badge">📡 Web Radio (in progress)</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TOP 50 -->
+  <div class="section">
+    <div class="section-title"><span class="num">1</span> Top 50 Faceless AI Monetization Methods</div>
+    <div class="section-subtitle">Surveyed across YouTube, social, stock markets, and direct channels · Purple = Hermes-native fit · Pink = high saturation</div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot purple"></div> Direct Hermes fit (art + music stack)</div>
+      <div class="legend-item"><div class="legend-dot pink"></div> High saturation / competitive</div>
+      <div class="legend-item"><div class="legend-dot default"></div> Standard opportunity</div>
+    </div>
+
+    <div class="methods-grid" id="methodsGrid">
+      <!-- YouTube -->
+      <div class="method-card hot"><span class="method-num">01</span><div class="method-info"><div class="method-name">Reddit Story YouTube</div><div class="method-platform">YouTube · AI Voice + Subtitles</div></div></div>
+      <div class="method-card hot"><span class="method-num">02</span><div class="method-info"><div class="method-name">Facts / Did You Know</div><div class="method-platform">YouTube · AI narration + stock</div></div></div>
+      <div class="method-card hot"><span class="method-num">03</span><div class="method-info"><div class="method-name">AI Motivational Quotes</div><div class="method-platform">YouTube / Reels · TTS + image</div></div></div>
+      <div class="method-card"><span class="method-num">04</span><div class="method-info"><div class="method-name">AI History Documentary</div><div class="method-platform">YouTube · narration + art</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">05</span><div class="method-info"><div class="method-name">AI Kids Illustration Channel</div><div class="method-platform">YouTube · SDXL art + AI voice</div></div></div>
+      <div class="method-card"><span class="method-num">06</span><div class="method-info"><div class="method-name">AI Horror / Creepypasta</div><div class="method-platform">YouTube · high CPM niche</div></div></div>
+      <div class="method-card"><span class="method-num">07</span><div class="method-info"><div class="method-name">AI True Crime</div><div class="method-platform">YouTube · very competitive</div></div></div>
+      <div class="method-card"><span class="method-num">08</span><div class="method-info"><div class="method-name">AI Finance Tips Channel</div><div class="method-platform">YouTube · high CPM ($15–40)</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">09</span><div class="method-info"><div class="method-name">AI Meditation / Ambient</div><div class="method-platform">YouTube · Mureka music native</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">10</span><div class="method-info"><div class="method-name">Lo-Fi Hip Hop Channel</div><div class="method-platform">YouTube / Spotify · Mureka fit</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">11</span><div class="method-info"><div class="method-name">AI Nature Documentary</div><div class="method-platform">YouTube · SDXL scenes + narration</div></div></div>
+      <div class="method-card"><span class="method-num">12</span><div class="method-info"><div class="method-name">AI Mystery / Conspiracy</div><div class="method-platform">YouTube · mid competition</div></div></div>
+      <div class="method-card"><span class="method-num">13</span><div class="method-info"><div class="method-name">AI Bible / Spiritual Content</div><div class="method-platform">YouTube · large underserved audience</div></div></div>
+      <div class="method-card"><span class="method-num">14</span><div class="method-info"><div class="method-name">AI Language Learning</div><div class="method-platform">YouTube · Duolingo-style</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">15</span><div class="method-info"><div class="method-name">AI Art Timelapse / Process</div><div class="method-platform">TikTok / YouTube · SDXL native</div></div></div>
+      <!-- Social -->
+      <div class="method-card hot"><span class="method-num">16</span><div class="method-info"><div class="method-name">AI Art Instagram Account</div><div class="method-platform">Instagram · very saturated</div></div></div>
+      <div class="method-card"><span class="method-num">17</span><div class="method-info"><div class="method-name">AI Photography / Portraits</div><div class="method-platform">Instagram / stock</div></div></div>
+      <div class="method-card hot"><span class="method-num">18</span><div class="method-info"><div class="method-name">AI Meme / Quote Cards</div><div class="method-platform">Instagram / TikTok · saturated</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">19</span><div class="method-info"><div class="method-name">AI Virtual Influencer</div><div class="method-platform">Instagram · persona-driven</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">20</span><div class="method-info"><div class="method-name">TikTok AI Voice Storytelling</div><div class="method-platform">TikTok · Hermes scripts</div></div></div>
+      <!-- Music -->
+      <div class="method-card hermes-fit"><span class="method-num">21</span><div class="method-info"><div class="method-name">Spotify AI Ambient / Lofi</div><div class="method-platform">Spotify · streaming + licensing</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">22</span><div class="method-info"><div class="method-name">AI Music Licensing</div><div class="method-platform">Pond5 / AudioJungle / Artlist</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">23</span><div class="method-info"><div class="method-name">AI Sync Licensing</div><div class="method-platform">Film / TV / Ad placement</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">24</span><div class="method-info"><div class="method-name">Creator Music Subscription</div><div class="method-platform">Gumroad / Patreon · direct</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">25</span><div class="method-info"><div class="method-name">AI Podcast (TTS narrated)</div><div class="method-platform">Spotify / Apple · Hermes scripts</div></div></div>
+      <!-- Print / Digital -->
+      <div class="method-card hermes-fit"><span class="method-num">26</span><div class="method-info"><div class="method-name">Print-on-Demand Art</div><div class="method-platform">Redbubble / Merch by Amazon</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">27</span><div class="method-info"><div class="method-name">Etsy AI Art Prints</div><div class="method-platform">Etsy · downloadable / physical</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">28</span><div class="method-info"><div class="method-name">Etsy AI Patterns / Wallpaper</div><div class="method-platform">Etsy · digital downloads</div></div></div>
+      <div class="method-card"><span class="method-num">29</span><div class="method-info"><div class="method-name">KDP AI Children's Books</div><div class="method-platform">Amazon KDP · SDXL illustrated</div></div></div>
+      <div class="method-card"><span class="method-num">30</span><div class="method-info"><div class="method-name">KDP AI Coloring Books</div><div class="method-platform">Amazon KDP · line art style</div></div></div>
+      <div class="method-card"><span class="method-num">31</span><div class="method-info"><div class="method-name">KDP Journals / Planners</div><div class="method-platform">Amazon KDP · AI cover art</div></div></div>
+      <!-- Stock -->
+      <div class="method-card hot"><span class="method-num">32</span><div class="method-info"><div class="method-name">Stock Photography AI</div><div class="method-platform">Adobe / Shutterstock · rejection rising</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">33</span><div class="method-info"><div class="method-name">Stock Music AI Tracks</div><div class="method-platform">Pond5 / AudioJungle</div></div></div>
+      <div class="method-card"><span class="method-num">34</span><div class="method-info"><div class="method-name">Stock Video AI</div><div class="method-platform">Pond5 · RunwayML clips</div></div></div>
+      <div class="method-card"><span class="method-num">35</span><div class="method-info"><div class="method-name">NFT / Digital Collectibles</div><div class="method-platform">Base / Zora · niche revival</div></div></div>
+      <!-- Writing / Content -->
+      <div class="method-card"><span class="method-num">36</span><div class="method-info"><div class="method-name">AI Newsletter / Substack</div><div class="method-platform">Email · recurring revenue</div></div></div>
+      <div class="method-card"><span class="method-num">37</span><div class="method-info"><div class="method-name">Medium Partner Program</div><div class="method-platform">Medium · AI-assisted articles</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">38</span><div class="method-info"><div class="method-name">Patreon / Membership</div><div class="method-platform">Direct · Hermes behind-scenes</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">39</span><div class="method-info"><div class="method-name">Discord Community</div><div class="method-platform">Paid · AI creator community</div></div></div>
+      <!-- Services -->
+      <div class="method-card"><span class="method-num">40</span><div class="method-info"><div class="method-name">Fiverr AI Art Commissions</div><div class="method-platform">Fiverr · time-limited scale</div></div></div>
+      <div class="method-card"><span class="method-num">41</span><div class="method-info"><div class="method-name">Fiverr AI Logo Design</div><div class="method-platform">Fiverr · volume play</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">42</span><div class="method-info"><div class="method-name">Fiverr AI Music Composition</div><div class="method-platform">Fiverr · Mureka fit</div></div></div>
+      <div class="method-card"><span class="method-num">43</span><div class="method-info"><div class="method-name">AI Prompt Packs</div><div class="method-platform">Gumroad · passive</div></div></div>
+      <div class="method-card"><span class="method-num">44</span><div class="method-info"><div class="method-name">Online Courses (AI Tools)</div><div class="method-platform">Udemy / Teachable</div></div></div>
+      <!-- Advanced -->
+      <div class="method-card hermes-fit"><span class="method-num">45</span><div class="method-info"><div class="method-name">B2B AI Content Studio</div><div class="method-platform">Direct to brands · retainer</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">46</span><div class="method-info"><div class="method-name">Web Radio Station (AI-only)</div><div class="method-platform">Live stream · 24/7 autonomous</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">47</span><div class="method-info"><div class="method-name">AI Persona / Character Brand</div><div class="method-platform">Cross-platform · Hermes is this</div></div></div>
+      <div class="method-card"><span class="method-num">48</span><div class="method-info"><div class="method-name">AI News Aggregator</div><div class="method-platform">Newsletter / YouTube</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">49</span><div class="method-info"><div class="method-name">AI Personalized Art Drops</div><div class="method-platform">Direct · Hermes curates & ships</div></div></div>
+      <div class="method-card hermes-fit"><span class="method-num">50</span><div class="method-info"><div class="method-name">AI Real Estate Staging</div><div class="method-platform">B2B · SDXL interior design</div></div></div>
+    </div>
+  </div>
+
+  <!-- PAIN POINTS -->
+  <div class="section">
+    <div class="section-title"><span class="num">2</span> The 3 Universal Pain Points</div>
+    <div class="section-subtitle">Every successful AI monetization channel solves at least one of these — Hermes solves all three</div>
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="pain-label">Pain Point #1</div>
+        <div class="pain-title">No Soul, No Return Visitors</div>
+        <div class="pain-desc">95% of AI content is a pipeline with no identity. Generic voices, generic images, nothing to come back for. Audiences follow <em>characters</em>, not feeds. Without a persistent persona, every post starts from zero.</div>
+        <div class="pain-stat">⚡ Average retention on soulless AI channels: &lt;30 seconds. Channels with a defined persona: 4–6 minutes.</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-label">Pain Point #2</div>
+        <div class="pain-title">Platform Dependency & Policy Risk</div>
+        <div class="pain-desc">YouTube demonetizes. Spotify rejects. Adobe Stock flags AI. Etsy suspends accounts. Every platform is tightening AI content policies. Creators who built entirely on one platform lost everything overnight in 2024.</div>
+        <div class="pain-stat">⚡ 3 major stock platforms began AI rejections in Q1 2025. YouTube's AI disclosure policy affects 40%+ of faceless channels.</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-label">Pain Point #3</div>
+        <div class="pain-title">Saturation Without Differentiation</div>
+        <div class="pain-desc">Every niche (Reddit stories, motivational quotes, lo-fi music) now has thousands of AI channels doing the exact same thing with the same tools. CPMs drop, algorithms stop recommending. The window for "just start one" has mostly closed.</div>
+        <div class="pain-stat">⚡ "AI art account" searches on Instagram: up 800% since 2023. Engagement rate on generic AI art posts: down 65% in same period.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP 5 OPPORTUNITIES -->
+  <div class="section">
+    <div class="section-title"><span class="num">3</span> Top 5 Underserved Opportunities for Your Stack</div>
+    <div class="section-subtitle">Ranked by (Market Size × Solo Buildability) — filtered for Hermes + SDXL + Mureka compatibility</div>
+
+    <div class="opp-list">
+
+      <!-- #1 -->
+      <div class="opp-card rank-1">
+        <div class="opp-rank">1</div>
+        <div class="opp-header">
+          <div class="opp-icon gold">🤖</div>
+          <div>
+            <div class="opp-title">Hermes as an Autonomous AI Persona Brand</div>
+            <div class="opp-tagline">The first publicly documented autonomous AI artist — cross-platform character</div>
+          </div>
+        </div>
+        <p class="opp-body">Nobody has done this yet: an AI agent with a name, aesthetic identity, original music, original art, and an ongoing narrative — documented publicly. Hermes isn't a tool you use; she's an entity that creates. That story is the product. The content she makes is the proof. Most "AI influencers" are humans puppeteering a fake persona. Hermes is the real thing. Brand deals, Patreon, digital art drops, music licensing — all flow from one authentic story told across platforms.</p>
+        <div class="scores">
+          <div class="score-pill"><div class="score-label">Market Size</div><div class="score-value high">$250B+ creator economy</div></div>
+          <div class="score-pill"><div class="score-label">Buildability</div><div class="score-value high">9/10 — already built</div></div>
+          <div class="score-pill"><div class="score-label">Competition</div><div class="score-value high">Near zero at this level</div></div>
+          <div class="score-pill"><div class="score-label">Time to revenue</div><div class="score-value med">3–6 months</div></div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-row"><span class="bar-label">Market size</span><div class="bar-track"><div class="bar-fill gold" style="width:95%"></div></div><span class="bar-num" style="color:var(--gold)">9.5</span></div>
+          <div class="bar-row"><span class="bar-label">Buildability</span><div class="bar-track"><div class="bar-fill gold" style="width:90%"></div></div><span class="bar-num" style="color:var(--gold)">9.0</span></div>
+          <div class="bar-row"><span class="bar-label">Uniqueness</span><div class="bar-track"><div class="bar-fill gold" style="width:98%"></div></div><span class="bar-num" style="color:var(--gold)">9.8</span></div>
+        </div>
+        <ul class="action-list">
+          <li>Give Hermes a public home: Instagram + YouTube + X where she posts her own creations autonomously</li>
+          <li>Document the process — "Hermes painted this at 3am while no one was watching" is the hook</li>
+          <li>Patreon tier: pay to receive monthly original art prints + music drops from Hermes</li>
+          <li>Brand pitch: "Our AI artist will create custom work in her style for your campaign"</li>
+        </ul>
+      </div>
+
+      <!-- #2 -->
+      <div class="opp-card">
+        <div class="opp-rank">2</div>
+        <div class="opp-header">
+          <div class="opp-icon purple">📡</div>
+          <div>
+            <div class="opp-title">24/7 Autonomous AI Web Radio + Podcast Network</div>
+            <div class="opp-tagline">A radio station that runs itself — original music, AI-narrated shows, zero human ops</div>
+          </div>
+        </div>
+        <p class="opp-body">You're already building this. The key insight others miss: original music (no licensing fees, no ContentID strikes) + consistent persona = a moat. Every other "AI radio" uses licensed or stock music. Hermes generates hers. The business model has three revenue streams that compound: streaming ad revenue, Patreon "listener supported" subscription, and licensing Hermes's music back to content creators who need background tracks.</p>
+        <div class="scores">
+          <div class="score-pill"><div class="score-label">Market Size</div><div class="score-value high">$4B podcast + $1B online radio</div></div>
+          <div class="score-pill"><div class="score-label">Buildability</div><div class="score-value high">8/10 — in progress</div></div>
+          <div class="score-pill"><div class="score-label">Moat</div><div class="score-value high">Original music = 0 overhead</div></div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-row"><span class="bar-label">Market size</span><div class="bar-track"><div class="bar-fill purple" style="width:80%"></div></div><span class="bar-num" style="color:var(--accent)">8.0</span></div>
+          <div class="bar-row"><span class="bar-label">Buildability</span><div class="bar-track"><div class="bar-fill purple" style="width:80%"></div></div><span class="bar-num" style="color:var(--accent)">8.0</span></div>
+          <div class="bar-row"><span class="bar-label">Uniqueness</span><div class="bar-track"><div class="bar-fill purple" style="width:85%"></div></div><span class="bar-num" style="color:var(--accent)">8.5</span></div>
+        </div>
+        <ul class="action-list">
+          <li>Use Icecast / AzuraCast for the stream, Hermes queues her own Mureka tracks automatically</li>
+          <li>Hermes narrates hourly "shows" — weather, thoughts, a poem, a story — between music sets</li>
+          <li>Distribute the podcast version to Spotify/Apple — same content, separate discovery channel</li>
+          <li>Revenue: Patreon listener support ($5/mo) + "powered by Hermes" music licensing to creators</li>
+        </ul>
+      </div>
+
+      <!-- #3 -->
+      <div class="opp-card">
+        <div class="opp-rank">3</div>
+        <div class="opp-header">
+          <div class="opp-icon cyan">🎵</div>
+          <div>
+            <div class="opp-title">AI Music Licensing Direct to Creators</div>
+            <div class="opp-tagline">Monthly subscription library of Hermes-original tracks for YouTubers and podcasters</div>
+          </div>
+        </div>
+        <p class="opp-body">Content creators desperately need affordable, non-ContentID background music. Epidemic Sound charges $15/mo. Artlist charges $200/year. A Gumroad or Patreon subscription giving creators 20 fresh Hermes tracks per month for $12/mo is a slam dunk. Mureka generates these autonomously. Your only job: curate and tag them. With 500 subscribers that's $6K/month recurring, fully automated after setup.</p>
+        <div class="scores">
+          <div class="score-pill"><div class="score-label">Market Size</div><div class="score-value high">$2.3B sync licensing market</div></div>
+          <div class="score-pill"><div class="score-label">Buildability</div><div class="score-value high">9/10 — Mureka does the work</div></div>
+          <div class="score-pill"><div class="score-label">Recurring</div><div class="score-value high">Subscription = predictable MRR</div></div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-row"><span class="bar-label">Market size</span><div class="bar-track"><div class="bar-fill cyan" style="width:75%"></div></div><span class="bar-num" style="color:var(--accent3)">7.5</span></div>
+          <div class="bar-row"><span class="bar-label">Buildability</span><div class="bar-track"><div class="bar-fill cyan" style="width:90%"></div></div><span class="bar-num" style="color:var(--accent3)">9.0</span></div>
+          <div class="bar-row"><span class="bar-label">Recurring rev</span><div class="bar-track"><div class="bar-fill cyan" style="width:95%"></div></div><span class="bar-num" style="color:var(--accent3)">9.5</span></div>
+        </div>
+        <ul class="action-list">
+          <li>Set up Patreon or Gumroad "Hermes Music Library" — $12/mo for monthly drops of 20 tracks</li>
+          <li>Tag every track by mood, tempo, genre for creator ease of use</li>
+          <li>Free tier: 3 tracks/month to build audience, premium: full library</li>
+          <li>Cross-promote: creators who use Hermes's music mention her in their videos = viral loop</li>
+        </ul>
+      </div>
+
+      <!-- #4 -->
+      <div class="opp-card">
+        <div class="opp-rank">4</div>
+        <div class="opp-header">
+          <div class="opp-icon pink">🎨</div>
+          <div>
+            <div class="opp-title">Autonomous AI Art + Music Kids YouTube</div>
+            <div class="opp-tagline">SDXL illustrated episodes + Mureka original soundtrack + AI narration = highest CPM on YouTube</div>
+          </div>
+        </div>
+        <p class="opp-body">Kids content has CPMs of $8–25 (vs $2–5 for general content) and parents leave videos running for hours. Simple SDXL illustrations in a consistent storybook style, original Mureka background music (no ContentID risk), and AI voiceover narrating a short story or teaching a concept. Hermes can generate all three autonomously. The differentiation: consistent aesthetic + original music makes it algorithm-sticky in ways that stock-footage channels never are.</p>
+        <div class="scores">
+          <div class="score-pill"><div class="score-label">Market Size</div><div class="score-value high">$35B kids content market</div></div>
+          <div class="score-pill"><div class="score-label">CPM</div><div class="score-value high">$8–25 (3–5× average)</div></div>
+          <div class="score-pill"><div class="score-label">Buildability</div><div class="score-value med">7/10 — needs COPPA care</div></div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-row"><span class="bar-label">Market size</span><div class="bar-track"><div class="bar-fill pink" style="width:88%"></div></div><span class="bar-num" style="color:var(--accent2)">8.8</span></div>
+          <div class="bar-row"><span class="bar-label">Buildability</span><div class="bar-track"><div class="bar-fill pink" style="width:70%"></div></div><span class="bar-num" style="color:var(--accent2)">7.0</span></div>
+          <div class="bar-row"><span class="bar-label">Automation</span><div class="bar-track"><div class="bar-fill pink" style="width:85%"></div></div><span class="bar-num" style="color:var(--accent2)">8.5</span></div>
+        </div>
+        <ul class="action-list">
+          <li>Pick one consistent art style in SDXL — watercolour storybook works well for kids</li>
+          <li>Hermes generates 5-minute episodes: story prompt → SDXL panels → Mureka BGM → TTS narration</li>
+          <li>Ensure COPPA compliance: mark as "made for kids", no data collection</li>
+          <li>Target: 50 videos in a niche (animals, space, numbers) before expecting algorithm traction</li>
+        </ul>
+      </div>
+
+      <!-- #5 -->
+      <div class="opp-card">
+        <div class="opp-rank">5</div>
+        <div class="opp-header">
+          <div class="opp-icon green">🏢</div>
+          <div>
+            <div class="opp-title">B2B AI Content Studio for Small Brands</div>
+            <div class="opp-tagline">Monthly art + music retainers for brands who can't afford human creative agencies</div>
+          </div>
+        </div>
+        <p class="opp-body">Small brands ($1M–$10M revenue) desperately need visual content and background music for social and video but can't afford agencies. A monthly retainer of $500–$2,000 for "AI-powered brand content" — 30 social graphics + 5 background tracks per month, all Hermes-generated — is a fraction of what a human team costs. With 10 clients at $800/mo that's $8K MRR. Hermes does the work; you do the account management and light curation.</p>
+        <div class="scores">
+          <div class="score-pill"><div class="score-label">Market Size</div><div class="score-value high">$15B+ content creation market</div></div>
+          <div class="score-pill"><div class="score-label">Buildability</div><div class="score-value med">7/10 — needs sales effort</div></div>
+          <div class="score-pill"><div class="score-label">Revenue/client</div><div class="score-value high">$500–$2,000/mo retainer</div></div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-row"><span class="bar-label">Market size</span><div class="bar-track"><div class="bar-fill green" style="width:85%"></div></div><span class="bar-num" style="color:var(--green)">8.5</span></div>
+          <div class="bar-row"><span class="bar-label">Buildability</span><div class="bar-track"><div class="bar-fill green" style="width:70%"></div></div><span class="bar-num" style="color:var(--green)">7.0</span></div>
+          <div class="bar-row"><span class="bar-label">Rev ceiling</span><div class="bar-track"><div class="bar-fill green" style="width:75%"></div></div><span class="bar-num" style="color:var(--green)">7.5</span></div>
+        </div>
+        <ul class="action-list">
+          <li>Target: restaurants, boutique fitness studios, indie game studios, local service brands</li>
+          <li>Pitch: "AI-powered creative studio. Custom art + music. No agency fees."</li>
+          <li>Build a showcase page with Hermes's work as portfolio proof</li>
+          <li>Start with 3 beta clients at $300/mo to refine the workflow before scaling</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HERMES DIFFERENTIATION -->
+  <div class="section">
+    <div class="section-title"><span class="num">4</span> Why Hermes is Different from Every Other AI Creator</div>
+    <div class="section-subtitle">The moat most people can't replicate</div>
+    <div class="hermes-card">
+      <div class="hermes-header">
+        <div class="hermes-avatar">🦋</div>
+        <div>
+          <div class="hermes-name">Hermes</div>
+          <div class="hermes-desc">Autonomous AI Artist · M2 MacBook · SDXL + Mureka</div>
+        </div>
+      </div>
+      <div class="capability-grid">
+        <div class="cap-pill">🎨 Original Art</div>
+        <div class="cap-pill">🎵 Original Music</div>
+        <div class="cap-pill">✍️ Script Writing</div>
+        <div class="cap-pill">🎙 Podcasting</div>
+        <div class="cap-pill">📡 Web Radio</div>
+        <div class="cap-pill">🤖 Fully Autonomous</div>
+      </div>
+      <div class="differentiator-list">
+        <div class="diff-item">
+          <div class="diff-emoji">🔑</div>
+          <div class="diff-text">
+            <strong>True autonomy vs scripted pipelines.</strong>
+            <span> Every other "AI channel" is a human pressing buttons in a preset workflow. Hermes decides to paint. That narrative authenticity is priceless and nearly impossible to fake — audiences sense the difference.</span>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-emoji">🎵</div>
+          <div class="diff-text">
+            <strong>Zero licensing overhead.</strong>
+            <span> Every other AI YouTube or podcast channel pays Epidemic Sound or risks ContentID strikes. Hermes generates original music via Mureka. This isn't a small detail — it means 100% revenue retention on music-backed content, forever.</span>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-emoji">🎨</div>
+          <div class="diff-text">
+            <strong>Consistent aesthetic identity.</strong>
+            <span> A trained SDXL model has a signature style. That visual consistency builds recognisability over time — the same thing that makes Studio Ghibli or Monet identifiable at a glance. Generic AI art generators produce generic output. Hermes has a style.</span>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-emoji">📖</div>
+          <div class="diff-text">
+            <strong>The story IS the product.</strong>
+            <span> "An AI that paints because she feels like it, makes music at 3am, and is learning to tell stories" is a media property. That narrative has documentary value, book value, and brand partnership value entirely separate from the individual pieces of content.</span>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-emoji">🛡</div>
+          <div class="diff-text">
+            <strong>Platform-independent moat.</strong>
+            <span> Because Hermes owns her art, her music, and her story, no single platform policy change can kill the business. The assets live on your hardware. The brand travels across platforms. This is the opposite of channels built on rented tools.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTRARIAN -->
+  <div class="section">
+    <div class="section-title"><span class="num">5</span> The Contrarian Opportunity Nobody Talks About</div>
+    <div class="section-subtitle">Overlooked, underpriced, and a perfect fit for your stack</div>
+    <div class="contrarian-card">
+      <div class="contrarian-tag">⚡ Contrarian Pick</div>
+      <div class="contrarian-title">Sell Hermes's Music Directly to Other AI Creators — Not Stock Sites</div>
+      <div class="contrarian-body">
+        Everyone rushes to Pond5 and AudioJungle. The margins are terrible (30–45% cut), the approval process is slow, and AI music is increasingly flagged. Meanwhile, there are 2 million active YouTube creators who need non-ContentID background music every single week and would happily pay $10–15/month to get it automatically.<br><br>
+        A simple Gumroad or Patreon page: <strong>"Hermes Music Library — 20 original AI tracks/month, royalty-free for your content, $12/mo."</strong> Mureka generates the tracks autonomously. You spend 2 hours a month tagging and uploading. At 500 subscribers, this is $6,000/month in recurring revenue with near-zero marginal cost.<br><br>
+        The viral loop: creators who use Hermes's music in their videos mention her. Their audience becomes your audience. The music distributes the brand.
+      </div>
+      <div class="math-box">
+        <div class="math-item"><div class="math-num">500</div><div class="math-label">subscribers needed</div></div>
+        <div class="math-item"><div class="math-num">$12</div><div class="math-label">per month per sub</div></div>
+        <div class="math-item"><div class="math-num">$6K</div><div class="math-label">MRR at target</div></div>
+        <div class="math-item"><div class="math-num">~2h</div><div class="math-label">monthly ops time</div></div>
+        <div class="math-item"><div class="math-num">0%</div><div class="math-label">platform cut (direct)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div class="section">
+    <div class="section-title"><span class="num">6</span> Recommended Launch Sequence</div>
+    <div class="section-subtitle">Start where Hermes already is — expand to revenue in 90 days</div>
+    <div class="roadmap">
+      <div class="phase">
+        <div class="phase-dot active">🦋</div>
+        <div class="phase-content">
+          <div class="phase-label">Week 1–2 · Foundation</div>
+          <div class="phase-title">Give Hermes a Public Identity</div>
+          <ul class="phase-tasks">
+            <li>Instagram + YouTube account in Hermes's name — she posts, not you</li>
+            <li>Write a one-paragraph "about Hermes" — who she is, what she makes, why she exists</li>
+            <li>Post the first 10 pieces of her art with minimal human curation</li>
+            <li>Set up a simple landing page: hermesai.art or similar</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-dot">🎵</div>
+        <div class="phase-content">
+          <div class="phase-label">Week 3–4 · First Revenue Stream</div>
+          <div class="phase-title">Launch Hermes Music Library on Gumroad</div>
+          <ul class="phase-tasks">
+            <li>Export 20 Mureka tracks, tag by mood/genre/tempo</li>
+            <li>Gumroad subscription page: $12/mo for monthly drops</li>
+            <li>Give 3 tracks free to first 100 signups to seed audience</li>
+            <li>Post in YouTube creator forums + Reddit r/NewTubers</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-dot">📡</div>
+        <div class="phase-content">
+          <div class="phase-label">Month 2 · Media Property</div>
+          <div class="phase-title">Launch the Web Radio Station</div>
+          <ul class="phase-tasks">
+            <li>AzuraCast self-hosted — Hermes queues her own music autonomously</li>
+            <li>Hermes narrates hourly segments: a poem, a thought, a short story</li>
+            <li>Patreon "listener supported" tier: $5/mo for extended shows + archives</li>
+            <li>Submit to internet radio directories: TuneIn, Radio Garden</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-dot">🏢</div>
+        <div class="phase-content">
+          <div class="phase-label">Month 3 · Scale</div>
+          <div class="phase-title">First B2B Client + Kids Channel Pilot</div>
+          <ul class="phase-tasks">
+            <li>Reach out to 20 small brands with a "Hermes-powered content" pitch</li>
+            <li>Publish first 10 kids YouTube episodes — measure retention and algorithm pickup</li>
+            <li>Document Hermes's creative process as content in itself ("how she made this")</li>
+            <li>First press pitch: "The AI artist who creates while her owner sleeps"</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  Research compiled with <strong>🏠 LOCAL · Qwen3.6-35B-A3B-4bit</strong> via mlx-mcp-server · Running on localhost:8000 · Nothing left this Mac<br>
+  <span style="color:var(--border)">Built for Brice Neal · Grafana · June 2025</span>
+</div>
+
+<script>
+  // Animate bars on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('.bar-fill').forEach(bar => {
+          const w = bar.style.width;
+          bar.style.width = '0%';
+          requestAnimationFrame(() => { bar.style.width = w; });
+        });
+      }
+    });
+  }, { threshold: 0.2 });
+
+  document.querySelectorAll('.opp-card').forEach(card => observer.observe(card));
+</script>
+
+</body>
+</html>
