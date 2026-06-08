@@ -29,6 +29,12 @@ async def chat(
     top_k: int = 0,
 ) -> str:
     """Send a message to the local LLM and return the response with token usage."""
+    # Clamp parameters to safe ranges to prevent resource exhaustion
+    temperature = max(0.0, min(2.0, temperature))
+    max_tokens = max(1, min(4096, max_tokens))
+    top_p = max(0.0, min(1.0, top_p))
+    top_k = max(0, min(200, top_k))
+
     _NO_THINK = (
         "You are a direct, concise assistant. "
         "Output ONLY your final answer. "
@@ -187,7 +193,10 @@ def main() -> None:
         "--api-key",
         default="",
         metavar="KEY",
-        help="Value for MLX_API_KEY (required for oMLX and other secured backends)",
+        help=(
+            "Value for MLX_API_KEY (required for oMLX and other secured backends). "
+            "Tip: set MLX_API_KEY in your environment instead to keep the key out of shell history."
+        ),
     )
     install_parser.add_argument(
         "--dry-run",
@@ -198,12 +207,15 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "install":
+        import os as _os
         from .installer import install
+        # Prefer env var over CLI flag so the key doesn't appear in shell history or ps output
+        api_key = args.api_key or _os.environ.get("MLX_API_KEY", "")
         install(
             claude_code=args.claude_code,
             base_url=args.base_url,
             model=args.model,
-            api_key=args.api_key,
+            api_key=api_key,
             dry_run=args.dry_run,
         )
     else:

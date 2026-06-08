@@ -13,7 +13,11 @@ def _claude_desktop_config_path() -> Path:
     elif system == "Linux":
         return Path.home() / ".config" / "claude" / "claude_desktop_config.json"
     elif system == "Windows":
-        appdata = os.environ.get("APPDATA", "")
+        appdata = os.environ.get("APPDATA")
+        if not appdata:
+            raise RuntimeError(
+                "APPDATA environment variable is not set — cannot locate Claude Desktop config on Windows."
+            )
         return Path(appdata) / "Claude" / "claude_desktop_config.json"
     else:
         raise RuntimeError(f"Unsupported platform: {system}")
@@ -28,7 +32,13 @@ def install(*, claude_code: bool, base_url: str, model: str, api_key: str, dry_r
 
     config: dict = {}
     if config_path.exists():
-        config = json.loads(config_path.read_text())
+        try:
+            config = json.loads(config_path.read_text())
+        except json.JSONDecodeError as e:
+            raise SystemExit(
+                f"Existing config at {config_path} contains invalid JSON: {e}\n"
+                "Fix or remove the file before re-running."
+            ) from None
 
     env: dict[str, str] = {
         "MLX_BASE_URL": base_url,

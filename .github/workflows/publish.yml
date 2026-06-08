@@ -11,16 +11,16 @@ jobs:
     permissions:
       id-token: write  # required for OIDC trusted publishing
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      # Pinned to commit SHA — avoids mutable tag supply-chain risk
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683       # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2f   # v5.3.0
         with:
           python-version: "3.11"
 
       - name: Build package
         run: |
-          pip install build
+          pip install build==1.2.2
           python -m build
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@76f52ab353b4c6b4cfc894e29ba44bbeae26b89b  # v1.12.4

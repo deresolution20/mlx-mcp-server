@@ -34,6 +34,7 @@ class LLMClient:
             base_url=config.base_url,
             headers=headers,
             timeout=config.timeout,
+            trust_env=False,  # don't inherit HTTP_PROXY from environment (avoids leaking api_key to proxy)
         )
 
     async def _get_model(self) -> str:
