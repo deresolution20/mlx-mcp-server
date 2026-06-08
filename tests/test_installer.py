@@ -15,7 +15,7 @@ def test_install_creates_config_file(tmp_path, monkeypatch):
     config_file = tmp_path / "claude_desktop_config.json"
     monkeypatch.setattr("mlx_mcp_server.installer._claude_desktop_config_path", lambda: config_file)
 
-    install(claude_code=False, base_url="http://localhost:8080", model="", dry_run=False)
+    install(claude_code=False, base_url="http://localhost:8080", model="", api_key="", dry_run=False)
 
     assert config_file.exists()
     data = json.loads(config_file.read_text())
@@ -32,7 +32,7 @@ def test_install_preserves_existing_servers(tmp_path, monkeypatch):
     }))
     monkeypatch.setattr("mlx_mcp_server.installer._claude_desktop_config_path", lambda: config_file)
 
-    install(claude_code=False, base_url="http://localhost:8080", model="", dry_run=False)
+    install(claude_code=False, base_url="http://localhost:8080", model="", api_key="", dry_run=False)
 
     data = json.loads(config_file.read_text())
     assert "other-server" in data["mcpServers"]
@@ -48,7 +48,7 @@ def test_install_updates_existing_mlx_entry(tmp_path, monkeypatch):
     }))
     monkeypatch.setattr("mlx_mcp_server.installer._claude_desktop_config_path", lambda: config_file)
 
-    install(claude_code=False, base_url="http://localhost:8080", model="mistral", dry_run=False)
+    install(claude_code=False, base_url="http://localhost:8080", model="mistral", api_key="", dry_run=False)
 
     data = json.loads(config_file.read_text())
     assert data["mcpServers"]["mlx"]["env"]["MLX_BASE_URL"] == "http://localhost:8080"
@@ -59,7 +59,7 @@ def test_install_dry_run_does_not_write(tmp_path, monkeypatch, capsys):
     config_file = tmp_path / "claude_desktop_config.json"
     monkeypatch.setattr("mlx_mcp_server.installer._claude_desktop_config_path", lambda: config_file)
 
-    install(claude_code=False, base_url="http://localhost:8080", model="", dry_run=True)
+    install(claude_code=False, base_url="http://localhost:8080", model="", api_key="", dry_run=True)
 
     assert not config_file.exists()
     captured = capsys.readouterr()
@@ -70,7 +70,28 @@ def test_install_claude_code(tmp_path, monkeypatch):
     config_file = tmp_path / "settings.json"
     monkeypatch.setattr("mlx_mcp_server.installer._claude_code_config_path", lambda: config_file)
 
-    install(claude_code=True, base_url="http://localhost:8080", model="", dry_run=False)
+    install(claude_code=True, base_url="http://localhost:8080", model="", api_key="", dry_run=False)
 
     data = json.loads(config_file.read_text())
     assert "mlx" in data["mcpServers"]
+
+
+def test_install_with_api_key(tmp_path, monkeypatch):
+    config_file = tmp_path / "claude_desktop_config.json"
+    monkeypatch.setattr("mlx_mcp_server.installer._claude_desktop_config_path", lambda: config_file)
+
+    install(claude_code=False, base_url="http://localhost:8000", model="", api_key="my-secret-key", dry_run=False)
+
+    data = json.loads(config_file.read_text())
+    assert data["mcpServers"]["mlx"]["env"]["MLX_API_KEY"] == "my-secret-key"
+    assert data["mcpServers"]["mlx"]["env"]["MLX_BASE_URL"] == "http://localhost:8000"
+
+
+def test_install_without_api_key_omits_key(tmp_path, monkeypatch):
+    config_file = tmp_path / "claude_desktop_config.json"
+    monkeypatch.setattr("mlx_mcp_server.installer._claude_desktop_config_path", lambda: config_file)
+
+    install(claude_code=False, base_url="http://localhost:8080", model="", api_key="", dry_run=False)
+
+    data = json.loads(config_file.read_text())
+    assert "MLX_API_KEY" not in data["mcpServers"]["mlx"]["env"]

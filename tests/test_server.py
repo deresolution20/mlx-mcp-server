@@ -59,8 +59,8 @@ async def test_quick_test_code_review():
 
 @respx.mock
 async def test_health_check_tool_ok():
-    respx.get("http://localhost:8080/v1/models").mock(
-        return_value=httpx.Response(200, json={"data": [{"id": "mistral-7b"}]})
+    respx.get("http://localhost:8080/health").mock(
+        return_value=httpx.Response(200, json={"status": "healthy", "engine_pool": {"loaded_count": 1, "model_count": 1}})
     )
     result = await health_check()
     data = json.loads(result)
@@ -68,7 +68,7 @@ async def test_health_check_tool_ok():
 
 @respx.mock
 async def test_health_check_tool_unreachable():
-    respx.get("http://localhost:8080/v1/models").mock(
+    respx.get("http://localhost:8080/health").mock(
         side_effect=httpx.ConnectError("refused")
     )
     result = await health_check()

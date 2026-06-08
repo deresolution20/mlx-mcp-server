@@ -23,19 +23,23 @@ def _claude_code_config_path() -> Path:
     return Path.home() / ".claude" / "settings.json"
 
 
-def install(*, claude_code: bool, base_url: str, model: str, dry_run: bool) -> None:
+def install(*, claude_code: bool, base_url: str, model: str, api_key: str, dry_run: bool) -> None:
     config_path = _claude_code_config_path() if claude_code else _claude_desktop_config_path()
 
     config: dict = {}
     if config_path.exists():
         config = json.loads(config_path.read_text())
 
+    env: dict[str, str] = {
+        "MLX_BASE_URL": base_url,
+        "MLX_DEFAULT_MODEL": model,
+    }
+    if api_key:
+        env["MLX_API_KEY"] = api_key
+
     config.setdefault("mcpServers", {})["mlx"] = {
         "command": "mlx-mcp-server",
-        "env": {
-            "MLX_BASE_URL": base_url,
-            "MLX_DEFAULT_MODEL": model,
-        },
+        "env": env,
     }
 
     output = json.dumps(config, indent=2)

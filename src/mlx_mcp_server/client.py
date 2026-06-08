@@ -78,6 +78,26 @@ class LLMClient:
         return [ModelInfo(id=m["id"]) for m in resp.json().get("data", [])]
 
     async def health_check(self) -> dict:
+        # Try /health first — works without auth on oMLX and other backends
+        try:
+            resp = await self._http.get("/health", timeout=5.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                result: dict = {"status": "ok", "url": self.config.base_url}
+                if "engine_pool" in data:
+                    pool = data["engine_pool"]
+                    result["models_loaded"] = f"{pool.get('loaded_count', 0)}/{pool.get('model_count', 0)}"
+                return result
+        except httpx.ConnectError:
+            return {
+                "status": "unreachable",
+                "url": self.config.base_url,
+                "hint": f"Make sure your LLM backend is running at {self.config.base_url}.",
+            }
+        except Exception:
+            pass  # /health not available on this backend, fall through
+
+        # Fall back to /v1/models (MLX LM, Ollama, LM Studio)
         try:
             resp = await self._http.get("/v1/models", timeout=5.0)
             resp.raise_for_status()
@@ -87,10 +107,7 @@ class LLMClient:
             return {
                 "status": "unreachable",
                 "url": self.config.base_url,
-                "hint": (
-                    f"Make sure your LLM backend is running at {self.config.base_url}. "
-                    "For MLX: run `mlx_lm.server --model <model_path>`"
-                ),
+                "hint": f"Make sure your LLM backend is running at {self.config.base_url}.",
             }
         except Exception as exc:
             return {

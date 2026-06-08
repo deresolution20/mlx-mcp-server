@@ -104,7 +104,22 @@ async def test_list_models_empty(client):
     assert models == []
 
 @respx.mock
-async def test_health_check_ok(client):
+async def test_health_check_ok_via_health_endpoint(client):
+    # /health works without auth (oMLX-style)
+    respx.get("http://localhost:8080/health").mock(
+        return_value=httpx.Response(200, json={"status": "healthy", "engine_pool": {"loaded_count": 1, "model_count": 2}})
+    )
+    result = await client.health_check()
+    assert result["status"] == "ok"
+    assert result["url"] == "http://localhost:8080"
+    assert result["models_loaded"] == "1/2"
+
+@respx.mock
+async def test_health_check_ok_fallback_to_models(client):
+    # /health not available, falls back to /v1/models
+    respx.get("http://localhost:8080/health").mock(
+        return_value=httpx.Response(404)
+    )
     respx.get("http://localhost:8080/v1/models").mock(
         return_value=httpx.Response(200, json={"data": [{"id": "mistral-7b"}]})
     )
@@ -115,10 +130,9 @@ async def test_health_check_ok(client):
 
 @respx.mock
 async def test_health_check_unreachable(client):
-    respx.get("http://localhost:8080/v1/models").mock(
+    respx.get("http://localhost:8080/health").mock(
         side_effect=httpx.ConnectError("Connection refused")
     )
     result = await client.health_check()
     assert result["status"] == "unreachable"
     assert "hint" in result
-    assert "mlx_lm.server" in result["hint"]

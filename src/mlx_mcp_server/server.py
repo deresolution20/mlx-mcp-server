@@ -164,6 +164,12 @@ def main() -> None:
         help="Value for MLX_DEFAULT_MODEL (required for Ollama)",
     )
     install_parser.add_argument(
+        "--api-key",
+        default="",
+        metavar="KEY",
+        help="Value for MLX_API_KEY (required for oMLX and other secured backends)",
+    )
+    install_parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print the config that would be written without modifying any files",
@@ -177,6 +183,7 @@ def main() -> None:
             claude_code=args.claude_code,
             base_url=args.base_url,
             model=args.model,
+            api_key=args.api_key,
             dry_run=args.dry_run,
         )
     else:
