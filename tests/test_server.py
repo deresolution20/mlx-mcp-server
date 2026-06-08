@@ -21,6 +21,7 @@ async def test_chat_tool_returns_formatted_output():
         return_value=httpx.Response(200, json=MOCK_CHAT_RESPONSE)
     )
     result = await chat("What is 6 × 7?")
+    assert "🏠 LOCAL" in result
     assert "42 is the answer." in result
     assert "20 total" in result
 
@@ -41,6 +42,7 @@ async def test_quick_test_hello():
         })
     )
     result = await quick_test("hello")
+    assert "🏠 LOCAL" in result
     assert "Test: hello" in result
     assert "Hi, I'm a language model." in result
     assert "tok/s" in result

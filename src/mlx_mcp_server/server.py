@@ -37,12 +37,13 @@ async def chat(
         top_p=top_p,
         top_k=top_k,
     )
-    model_tag = f" | Model: {result.model}" if result.model else ""
+    badge = f"🏠 LOCAL · {result.model}" if result.model else "🏠 LOCAL"
     return (
+        f"{badge}\n\n"
         f"{result.content}\n\n"
         f"---\n"
         f"Tokens: {result.prompt_tokens} prompt + {result.completion_tokens} completion"
-        f" = {result.total_tokens} total | {result.elapsed_seconds:.2f}s{model_tag}"
+        f" = {result.total_tokens} total | {result.elapsed_seconds:.2f}s"
     )
 
 
@@ -63,16 +64,13 @@ async def quick_test(
         if result.elapsed_seconds > 0
         else 0.0
     )
-    model_tag = f"Model: {result.model} | " if result.model else ""
+    badge = f"🏠 LOCAL · {result.model}" if result.model else "🏠 LOCAL"
     return (
         f"Test: {test_type}\n"
         f"Prompt: {prompt}\n\n"
         f"Response:\n{result.content}\n\n"
         f"---\n"
-        f"{model_tag}"
-        f"Latency: {result.elapsed_seconds:.2f}s | "
-        f"Completion tokens: {result.completion_tokens} | "
-        f"Speed: {tok_per_sec:.1f} tok/s"
+        f"{badge} · {tok_per_sec:.1f} tok/s · {result.completion_tokens} tokens · {result.elapsed_seconds:.2f}s"
     )
 
 
