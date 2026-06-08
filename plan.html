@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MLX MCP Server — Team Setup Guide</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --surface:  #1a1d27;
+      --border:   #2a2d3a;
+      --accent:   #7c6af7;
+      --green:    #4ade80;
+      --yellow:   #facc15;
+      --text:     #e2e8f0;
+      --muted:    #94a3b8;
+      --code-bg:  #0d1117;
+      --radius:   10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+      padding: 0 0 80px;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 0 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header h1 span {
+      color: var(--accent);
+    }
+
+    header p.subtitle {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-top: 4px;
+    }
+
+    /* ── Progress bar ────────────────────────── */
+    .progress-wrap {
+      margin-top: 20px;
+      padding-bottom: 16px;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .progress-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      border-radius: 999px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    /* ── Main content ────────────────────────── */
+    main {
+      max-width: 800px;
+      margin: 36px auto 0;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Step card ───────────────────────────── */
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.25s;
+    }
+
+    .step.done {
+      border-color: var(--green);
+    }
+
+    /* ── Step header ─────────────────────────── */
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 20px;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+    }
+
+    .step-header::-webkit-details-marker { display: none; }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.25s;
+    }
+
+    .step.done .step-num {
+      background: var(--green);
+      color: #0f1117;
+    }
+
+    .step-title {
+      flex: 1;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .cat-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--bg);
+    }
+
+    .chevron {
+      color: var(--muted);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    details[open] .chevron {
+      transform: rotate(180deg);
+    }
+
+    /* ── Step body ───────────────────────────── */
+    .step-body {
+      padding: 0 20px 22px;
+      border-top: 1px solid var(--border);
+    }
+
+    .step-desc {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 14px 0 18px;
+    }
+
+    /* ── Sub-steps ───────────────────────────── */
+    .substep {
+      margin-bottom: 20px;
+    }
+
+    .substep-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .substep-label input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .substep-label input[type="checkbox"]:checked {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .substep-label input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 0px;
+      width: 6px;
+      height: 10px;
+      border: 2px solid #0f1117;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .substep-label span {
+      padding-top: 1px;
+      line-height: 1.5;
+    }
+
+    /* ── Code blocks ─────────────────────────── */
+    .code-wrap {
+      position: relative;
+      margin: 8px 0 0;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
+    code {
+      font-family: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+      color: #c9d1d9;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--border);
+      border: none;
+      border-radius: 5px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-family: inherit;
+      padding: 4px 9px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .copy-btn:hover { background: var(--accent); color: #fff; }
+    .copy-btn.copied { background: var(--green); color: #0f1117; }
+
+    /* ── Notes ───────────────────────────────── */
+    .note {
+      border-radius: 7px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .note.validation {
+      background: rgba(74, 222, 128, 0.08);
+      border: 1px solid rgba(74, 222, 128, 0.25);
+      color: var(--green);
+    }
+
+    .note.warning {
+      background: rgba(250, 204, 21, 0.08);
+      border: 1px solid rgba(250, 204, 21, 0.25);
+      color: var(--yellow);
+    }
+
+    .note strong {
+      font-weight: 600;
+    }
+
+    /* ── Section headings inside steps ──────── */
+    .section-heading {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--accent);
+      margin: 18px 0 10px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>MLX MCP Server <span>— Team Setup Guide</span></h1>
+    <p class="subtitle">Seven steps from zero to a running local LLM connected to Claude.</p>
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span id="progress-label">0 / 0 steps completed</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── Step 1 ──────────────────────────────── -->
+  <details class="step" id="step-1">
+    <summary class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">Prerequisites</div>
+      <span class="cat-badge">setup</span>
+      <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </summary>
+    <div class="step-body">
+      <p class="step-desc">Confirm your environment has all required dependencies before installing the server.</p>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="1" />
+          <span>Verify Python 3.11 or higher</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>python3 --version</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <div class="note validation"><strong>✓ Validation:</strong> Output shows <code>Python 3.11.x</code> or higher.</div>
+      </div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="1" />
+          <span>Verify pip is available</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>pip --version</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+      </div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="1" />
+          <span>Install GitHub CLI and authenticate</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>brew install gh &amp;&amp; gh auth login</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+      </div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="1" />
+          <span>Install MLX LM <em>(Apple Silicon)</em> — or install Ollama for Intel/Linux</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>pip install mlx-lm</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <div class="note warning"><strong>⚠ Note:</strong> MLX only runs on Apple Silicon (M1/M2/M3/M4). If you are on Intel Mac or Linux, install Ollama instead: <code>brew install ollama</code></div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ── Step 2 ──────────────────────────────── -->
+  <details class="step" id="step-2">
+    <summary class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title">Install mlx-mcp-server</div>
+      <span class="cat-badge">install</span>
+      <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </summary>
+    <div class="step-body">
+      <p class="step-desc">Install the package from PyPI and confirm the CLI is accessible.</p>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="2" />
+          <span>Install the package</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>pip install mlx-mcp-server</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+      </div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="2" />
+          <span>Verify the CLI is working</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>mlx-mcp-server --help</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <div class="note validation"><strong>✓ Validation:</strong> Prints usage information including the <code>install</code> subcommand.</div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ── Step 3 ──────────────────────────────── -->
+  <details class="step" id="step-3">
+    <summary class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title">Configure Claude Desktop</div>
+      <span class="cat-badge">config</span>
+      <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </summary>
+    <div class="step-body">
+      <p class="step-desc">Register the MCP server with Claude Desktop so it appears as a toolset.</p>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="3" />
+          <span>Preview the config that will be written (dry run)</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>mlx-mcp-server install --dry-run</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <div class="note validation"><strong>✓ Validation:</strong> Prints JSON config — confirm it looks correct before writing.</div>
+      </div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="3" />
+          <span>Write the config to Claude Desktop</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>mlx-mcp-server install</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <div class="note validation"><strong>✓ Validation:</strong> Prints <code>Added mlx-mcp-server to Claude Desktop config</code>.</div>
+        <div class="note warning"><strong>⚠ Note:</strong> If you are using Ollama instead of MLX, pass additional flags: <code>mlx-mcp-server install --base-url http://localhost:11434 --model mistral</code></div>
+      </div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="3" />
+          <span>Fully restart Claude Desktop (Quit from menu, then reopen — do not just close the window)</span>
+        </label>
+      </div>
+    </div>
+  </details>
+
+  <!-- ── Step 4 ──────────────────────────────── -->
+  <details class="step" id="step-4">
+    <summary class="step-header">
+      <div class="step-num">4</div>
+      <div class="step-title">Start your local LLM</div>
+      <span class="cat-badge">runtime</span>
+      <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </summary>
+    <div class="step-body">
+      <p class="step-desc">Download a model and start the inference server that Claude will talk to.</p>
+
+      <div class="section-heading">Apple Silicon (MLX)</div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="4" />
+          <span>Download the Mistral 7B 4-bit model from HuggingFace</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>pip install huggingface_hub &amp;&amp; \
+huggingface-cli download mlx-community/Mistral-7B-Instruct-v0.3-4bit</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+      </div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="4" />
+          <span>Start the MLX LM server</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>mlx_lm.server --model mlx-community/Mistral-7B-Instruct-v0.3-4bit</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <div class="note validation"><strong>✓ Validation:</strong> Logs show <code>Starting server on http://localhost:8080</code>.</div>
+      </div>
+
+      <div class="section-heading">Ollama (Intel Mac / Linux)</div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="4" />
+          <span>Start Ollama and pull the Mistral model</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>ollama serve &amp; &amp;&amp; ollama pull mistral</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ── Step 5 ──────────────────────────────── -->
+  <details class="step" id="step-5">
+    <summary class="step-header">
+      <div class="step-num">5</div>
+      <div class="step-title">Verify in Claude Desktop</div>
+      <span class="cat-badge">test</span>
+      <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </summary>
+    <div class="step-body">
+      <p class="step-desc">Confirm Claude Desktop can see and use the MLX MCP tools.</p>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="5" />
+          <span>Open Claude Desktop and look for the tools icon in the toolbar</span>
+        </label>
+        <div class="note validation"><strong>✓ Validation:</strong> <code>mlx</code> is listed in the tools panel with 4 tools available.</div>
+      </div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="5" />
+          <span>Run a health check by asking Claude the following</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>Use the health_check tool to verify my local MLX server is running.</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <div class="note validation"><strong>✓ Validation:</strong> Claude reports <code>status: ok</code>.</div>
+      </div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="5" />
+          <span>Run a quick inference test</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>Use the quick_test tool with test_type=math</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <div class="note validation"><strong>✓ Validation:</strong> Returns a math response including tok/s throughput metrics.</div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ── Step 6 ──────────────────────────────── -->
+  <details class="step" id="step-6">
+    <summary class="step-header">
+      <div class="step-num">6</div>
+      <div class="step-title">Configure Claude Code <em style="font-weight:400;color:var(--muted)">(optional)</em></div>
+      <span class="cat-badge">config</span>
+      <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </summary>
+    <div class="step-body">
+      <p class="step-desc">Also wire up mlx-mcp-server for the Claude Code CLI, if you use it.</p>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="6" />
+          <span>Register with Claude Code</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>mlx-mcp-server install --claude-code</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <div class="note validation"><strong>✓ Validation:</strong> Prints <code>Added mlx-mcp-server to Claude Code config</code>.</div>
+      </div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="6" />
+          <span>Verify the tools are visible from Claude Code</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>Use the list_models tool</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <div class="note validation"><strong>✓ Validation:</strong> Claude Code lists available MLX models.</div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ── Step 7 ──────────────────────────────── -->
+  <details class="step" id="step-7">
+    <summary class="step-header">
+      <div class="step-num">7</div>
+      <div class="step-title">Share with your team</div>
+      <span class="cat-badge">team</span>
+      <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </summary>
+    <div class="step-body">
+      <p class="step-desc">Spread the word — two commands to get any teammate running.</p>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="7" />
+          <span>Share the one-liner install commands</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code># Apple Silicon (MLX)
+pip install mlx-mcp-server &amp;&amp; mlx-mcp-server install
+
+# Intel Mac / Linux (Ollama)
+pip install mlx-mcp-server &amp;&amp; mlx-mcp-server install --base-url http://localhost:11434 --model mistral</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+      </div>
+
+      <div class="substep">
+        <label class="substep-label">
+          <input type="checkbox" data-step="7" />
+          <span>Point teammates to the repo for docs and issue tracking</span>
+        </label>
+        <div class="code-wrap">
+          <pre><code>https://github.com/deresolution20/mlx-mcp-server</code></pre>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+      </div>
+    </div>
+  </details>
+
+</main>
+
+<script>
+  const LS_KEY = 'mlx-mcp-progress';
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function allCheckboxes() {
+    return [...document.querySelectorAll('input[type="checkbox"]')];
+  }
+
+  function stepCheckboxes(stepEl) {
+    return [...stepEl.querySelectorAll('input[type="checkbox"]')];
+  }
+
+  function stepId(stepEl) {
+    return stepEl.id; // "step-N"
+  }
+
+  // ── Persist ───────────────────────────────────────────────────────────────
+  function saveState() {
+    const state = {};
+    allCheckboxes().forEach((cb, i) => {
+      state[cb.dataset.cbIndex] = cb.checked;
+    });
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  }
+
+  function loadState() {
+    try {
+      return JSON.parse(localStorage.getItem(LS_KEY)) || {};
+    } catch { return {}; }
+  }
+
+  // ── Progress bar ──────────────────────────────────────────────────────────
+  function updateProgress() {
+    const all = allCheckboxes();
+    const checked = all.filter(cb => cb.checked).length;
+    const total = all.length;
+    const pct = total === 0 ? 0 : Math.round(checked / total * 100);
+
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+    document.getElementById('progress-label').textContent = checked + ' / ' + total + ' steps completed';
+  }
+
+  // ── Step done state ───────────────────────────────────────────────────────
+  function updateStepDone(stepEl) {
+    const cbs = stepCheckboxes(stepEl);
+    const done = cbs.length > 0 && cbs.every(cb => cb.checked);
+    stepEl.classList.toggle('done', done);
+  }
+
+  // ── Auto-open first incomplete step ───────────────────────────────────────
+  function autoOpen() {
+    const steps = [...document.querySelectorAll('.step')];
+    let opened = false;
+    for (const step of steps) {
+      const cbs = stepCheckboxes(step);
+      const done = cbs.length > 0 && cbs.every(cb => cb.checked);
+      if (!done && !opened) {
+        step.open = true;
+        opened = true;
+      } else {
+        step.open = false;
+      }
+    }
+    // If all done, open last step
+    if (!opened && steps.length > 0) {
+      steps[steps.length - 1].open = true;
+    }
+  }
+
+  // ── Copy button ───────────────────────────────────────────────────────────
+  function copyCode(btn) {
+    const pre = btn.previousElementSibling;
+    const text = pre.textContent.trim();
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.classList.remove('copied');
+      }, 1500);
+    }).catch(() => {
+      // Fallback for browsers without clipboard API
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.classList.remove('copied');
+      }, 1500);
+    });
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  function init() {
+    const state = loadState();
+    const cbs = allCheckboxes();
+
+    // Assign stable indices
+    cbs.forEach((cb, i) => {
+      cb.dataset.cbIndex = i;
+      if (state[i] !== undefined) cb.checked = state[i];
+    });
+
+    // Wire up change listeners
+    cbs.forEach(cb => {
+      const stepEl = cb.closest('.step');
+      cb.addEventListener('change', () => {
+        saveState();
+        updateStepDone(stepEl);
+        updateProgress();
+      });
+    });
+
+    // Initial render
+    document.querySelectorAll('.step').forEach(updateStepDone);
+    updateProgress();
+    autoOpen();
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
