@@ -24,7 +24,7 @@ async def chat(
     message: str,
     system_prompt: str = "",
     temperature: float = 0.7,
-    max_tokens: int = 512,
+    max_tokens: int = 1024,
     top_p: float = 1.0,
     top_k: int = 0,
 ) -> str:

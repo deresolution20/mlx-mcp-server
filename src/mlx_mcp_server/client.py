@@ -52,23 +52,63 @@ class LLMClient:
 
     @staticmethod
     def _strip_thinking(text: str) -> str:
-        """Remove <think>...</think> blocks that Qwen3 thinking mode emits."""
-        return re.sub(r"<think>.*?</think>\s*", "", text, flags=re.DOTALL).strip()
+        """Remove thinking preamble from Qwen3 responses.
+
+        Handles two formats:
+        1. <think>...</think> tags — standard Qwen3 API output
+        2. "Thinking Process:\\n\\n1. ..." plain text — oMLX strips the tags but
+           leaves the content, so we detect and remove the content block directly.
+        """
+        # Format 1: standard <think> XML tags
+        text = re.sub(r"<think>.*?</think>\s*", "", text, flags=re.DOTALL)
+
+        # Format 2: oMLX strips the tags but leaves "Thinking Process:\n\n1. ..." blocks.
+        # The actual answer follows as the first non-numbered, non-bulleted paragraph.
+        if re.match(r"\s*Thinking Process:", text):
+            # Walk lines: skip everything until we hit a blank line followed by a
+            # line that doesn't start with a digit, bullet, asterisk, or whitespace —
+            # that's where the real answer begins.
+            paragraphs = re.split(r"\n{2,}", text.strip())
+            answer_parts = []
+            in_thinking = True
+            for para in paragraphs:
+                if in_thinking:
+                    # A paragraph is "thinking" if it starts with a heading, number,
+                    # bullet, bold marker, or is the "Thinking Process:" header itself.
+                    first_line = para.lstrip()
+                    is_thinking_para = bool(re.match(
+                        r"(Thinking Process:|^\d+[\.\)]|^[\*\-]|^\*\*|\bLet['']s adjust\b)",
+                        first_line,
+                        re.MULTILINE,
+                    ))
+                    if not is_thinking_para:
+                        in_thinking = False
+                        answer_parts.append(para)
+                else:
+                    answer_parts.append(para)
+            text = "\n\n".join(answer_parts)
+
+        return text.strip()
 
     async def chat(
         self,
         message: str,
         system_prompt: str = "",
         temperature: float = 0.7,
-        max_tokens: int = 512,
+        max_tokens: int = 1024,
         top_p: float = 1.0,
         top_k: int = 0,
         enable_thinking: bool = False,
     ) -> ChatResponse:
+        # Layer 3: inject /no_think token into the user message.
+        # Qwen3's chat template checks for this token in the conversation text.
+        # oMLX ignores enable_thinking in the payload, but this works at the token level.
+        no_think_prefix = "/no_think\n" if not enable_thinking else ""
+
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": message})
+        messages.append({"role": "user", "content": no_think_prefix + message})
 
         payload: dict = {
             "messages": messages,

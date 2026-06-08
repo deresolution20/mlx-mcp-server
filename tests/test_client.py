@@ -42,7 +42,10 @@ async def test_chat_sends_system_prompt(client):
     import json
     body = json.loads(sent.content)
     assert body["messages"][0] == {"role": "system", "content": "You are a helpful assistant."}
-    assert body["messages"][1] == {"role": "user", "content": "Hello"}
+    # /no_think prefix is prepended to suppress Qwen3 thinking mode via token injection
+    assert body["messages"][1]["role"] == "user"
+    assert body["messages"][1]["content"].endswith("Hello")
+    assert "/no_think" in body["messages"][1]["content"]
 
 @respx.mock
 async def test_chat_omits_empty_system_prompt(client):
@@ -172,6 +175,36 @@ async def test_chat_graceful_when_model_detection_fails(client):
     body = _json.loads(chat_route.calls[0].request.content)
     assert "model" not in body
     assert result.content == "Hi"
+
+
+def test_strip_thinking_removes_xml_tags():
+    """Standard <think>...</think> tags are stripped (MLX-LM / direct API format)."""
+    raw = "<think>\nLet me reason about this carefully.\n</think>\n\nThe answer is 42."
+    assert LLMClient._strip_thinking(raw) == "The answer is 42."
+
+
+def test_strip_thinking_removes_omlx_plain_text_format():
+    """oMLX strips XML tags but leaves 'Thinking Process:' content — we strip that too."""
+    raw = (
+        "Thinking Process:\n\n"
+        "1.  **Analyze**: The user asked a question.\n"
+        "2.  **Consider**: I should answer directly.\n"
+        "3.  **Draft**: \"The answer is 42.\"\n\n"
+        "The answer is 42."
+    )
+    result = LLMClient._strip_thinking(raw)
+    assert "Thinking Process:" not in result
+    assert "The answer is 42." in result
+
+
+def test_strip_thinking_passthrough_when_no_thinking():
+    """Clean responses without thinking blocks are returned unchanged."""
+    raw = "The answer is 42."
+    assert LLMClient._strip_thinking(raw) == "The answer is 42."
+
+
+def test_strip_thinking_handles_empty_string():
+    assert LLMClient._strip_thinking("") == ""
 
 
 @respx.mock
