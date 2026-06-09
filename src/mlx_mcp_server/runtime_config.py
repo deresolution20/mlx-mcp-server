@@ -11,6 +11,7 @@ from pathlib import Path
 
 _CONFIG_DIR = Path.home() / ".config" / "mlx-mcp"
 _MODEL_FILE = _CONFIG_DIR / "active_model"
+_GUARD_FILE = _CONFIG_DIR / "work_hours_guard"  # presence = guard enabled
 
 
 def read_runtime_model() -> str:
@@ -40,3 +41,20 @@ def write_runtime_model(model: str) -> None:
         if os.path.exists(tmp):
             os.unlink(tmp)
         raise
+
+
+def read_work_hours_guard() -> bool:
+    """Return True if the work-hours guard is enabled (opt-in, off by default)."""
+    return _GUARD_FILE.exists()
+
+
+def write_work_hours_guard(enabled: bool) -> None:
+    """Enable or disable the work-hours guard."""
+    if enabled:
+        _CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        _GUARD_FILE.touch()
+    else:
+        try:
+            _GUARD_FILE.unlink()
+        except FileNotFoundError:
+            pass

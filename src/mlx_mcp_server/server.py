@@ -5,6 +5,7 @@ from mcp.server.fastmcp import FastMCP
 
 from .client import LLMClient
 from .config import load_config
+from .runtime_config import read_work_hours_guard, write_work_hours_guard
 
 _config = load_config()
 _client = LLMClient(_config)
@@ -15,24 +16,83 @@ mcp = FastMCP("mlx-mcp-server")
 def _model_description(model_id: str) -> str:
     """Return a one-liner description based on model name patterns."""
     m = model_id.lower()
-    if "coder" in m:
-        if any(x in m for x in ("7b", "9b")):
-            return "⚡ Speed — fast lookups, simple edits, ~30-50 tok/s"
-        if "14b" in m and "8bit" in m:
-            return "🎯 Quality — high-precision coding, balanced speed"
+
+    # DeepSeek Coder V2 Lite — MoE, speed king
+    if "deepseek" in m and "lite" in m:
+        return "⚡ Turbo — ~135 tok/s, instant subagent calls, quick lookups & boilerplate"
+
+    # Gemma 3 family
+    if "gemma" in m:
+        if "27b" in m:
+            return "🔮 Off-hours — ~35 tok/s, best quality, great for PR review & deep refactors"
+        if "12b" in m:
+            return "🔮 Quality — ~55 tok/s, strong instruction following"
+        return "🤖 Gemma"
+
+    # Qwen2.5-Coder family — reliable, no thinking mode
+    if "qwen" in m and "coder" in m:
+        if "7b" in m:
+            return "⚡ Fast — ~80 tok/s, ultra-light, quick answers with solid code quality"
         if "14b" in m:
-            return "⚖️  Balanced — everyday coding subagent, ~10-15 tok/s"
+            return "⚖️  Everyday — ~28 tok/s, reliable default for most coding tasks"
+        if "32b" in m and "6bit" in m:
+            return "🏆 Max quality — ~16 tok/s, needs /big-model mode (25 GB RAM)"
         if "32b" in m:
-            return "🧠 Quality — complex code, architecture review, ~6-10 tok/s"
-    if "claude" in m or "distilled" in m:
-        return "🔮 Reasoning — Claude Opus knowledge, strong analysis"
-    if "35b" in m or "a3b" in m:
-        if "ud" in m or "3bit" in m:
-            return "🧠 Quality — 35B at 3-bit, smaller footprint than 4-bit"
-        return "🧠 Quality — highest capability, thinking model, slow"
-    if "27b" in m:
-        return "🔮 Reasoning — large, strong general reasoning"
+            return "🧠 Quality — ~19 tok/s, complex code & multi-file reasoning"
+
+    # Generic fallbacks
+    if "coder" in m:
+        return "💻 Coding model"
+    if "distilled" in m:
+        return "🔮 Reasoning — distilled from large model"
+
     return "🤖 General purpose"
+
+_BIG_MODEL_RAM_THRESHOLD_GB = 22  # models above this need dedicated RAM headroom
+
+
+def _estimated_ram_gb(model_id: str) -> float:
+    """Estimate RAM needed (GB) based on model name patterns."""
+    m = model_id.lower()
+    params = 0.0
+    for tag, count in [
+        ("72b", 72), ("35b", 35), ("32b", 32), ("27b", 27),
+        ("14b", 14), ("9b", 9), ("7b", 7), ("3b", 3), ("1.5b", 1.5),
+    ]:
+        if tag in m:
+            params = count
+            break
+    if not params:
+        return 0.0
+    bits = 4
+    if "8bit" in m:
+        bits = 8
+    elif "6bit" in m:
+        bits = 6
+    elif "3bit" in m:
+        bits = 3
+    return (params * bits / 8) + 2  # +2 GB overhead
+
+
+def _is_work_hours(_now=None) -> bool:
+    """True when the guard is enabled AND it's Mon–Fri 8am–5pm Mountain Time.
+
+    Off by default — each user opts in via set_work_hours_guard(True).
+    _now is injectable for testing; omit in production.
+    """
+    if not read_work_hours_guard():
+        return False  # guard disabled — allow all models any time
+    try:
+        from zoneinfo import ZoneInfo
+    except ImportError:
+        return False
+    from datetime import datetime
+    if _now is None:
+        _now = datetime.now(ZoneInfo("America/Boise"))
+    if _now.weekday() >= 5:  # Sat / Sun
+        return False
+    return 8 <= _now.hour < 17
+
 
 _QUICK_TEST_PROMPTS: dict[str, str] = {
     "hello": "Say hello and introduce yourself briefly.",
@@ -118,17 +178,21 @@ async def quick_test(
 
 
 @mcp.tool()
-async def set_model(model_name: str) -> str:
+async def set_model(model_name: str, force: bool = False) -> str:
     """Switch the active model at runtime — no Claude Code restart needed.
 
     Accepts the full model name OR a case-insensitive fragment (fuzzy match).
     Changes persist across restarts via ~/.config/mlx-mcp/active_model.
     Pass an empty string to clear the override and fall back to auto-detection.
 
+    Large models (>22 GB estimated RAM) are blocked during work hours (Mon–Fri
+    8am–5pm Mountain Time) to prevent swap thrashing. Use force=True to bypass —
+    e.g. after running /big-model to close other apps first.
+
     Examples:
       set_model("coder-14b")           # matches Qwen2.5-Coder-14B-Instruct-4bit
-      set_model("35b")                 # matches Qwen3.6-35B-A3B-4bit
-      set_model("Qwen2.5-Coder-32B-Instruct-4bit")  # exact name also works
+      set_model("6bit")                # matches Qwen2.5-Coder-32B-Instruct-6bit
+      set_model("6bit", force=True)    # bypass work-hours guard (use after /big-model)
       set_model("")                    # clear override, fall back to auto-detect
     """
     if not model_name:
@@ -170,6 +234,19 @@ async def set_model(model_name: str) -> str:
                 f"Available models:\n{options}"
             )
 
+    # Work-hours guard: warn before loading big models that will likely 507 or swap.
+    ram_gb = _estimated_ram_gb(resolved)
+    if ram_gb > _BIG_MODEL_RAM_THRESHOLD_GB and _is_work_hours() and not force:
+        return (
+            f"⏰  Work hours detected (8am–5pm MT, Mon–Fri)\n\n"
+            f"   {resolved} needs ~{ram_gb:.0f} GB RAM.\n"
+            f"   Loading during work hours risks a 507 or ~1–2 tok/s swap speed.\n\n"
+            f"   Options:\n"
+            f"   • /big-model                      close other apps first, then load cleanly\n"
+            f"   • After 5pm MT / weekends          swap is acceptable for async use\n"
+            f"   • set_model(\"{model_name}\", force=True)   load anyway, you've been warned"
+        )
+
     _client.set_model(resolved)
     model_list = "\n".join(
         f"  {'→' if mid == resolved else ' '} {mid}"
@@ -180,6 +257,34 @@ async def set_model(model_name: str) -> str:
         f"✅ Active model set to: {resolved}{suffix}\n"
         f"   Persisted to ~/.config/mlx-mcp/active_model\n\n"
         f"Available models:\n{model_list}"
+    )
+
+
+@mcp.tool()
+def set_work_hours_guard(enabled: bool) -> str:
+    """Enable or disable the work-hours guard for large models.
+
+    When enabled, loading models that need >22 GB RAM is blocked Mon–Fri
+    8am–5pm Mountain Time to prevent swap thrashing during work hours.
+
+    Off by default — each team member opts in independently.
+    The setting persists across restarts in ~/.config/mlx-mcp/work_hours_guard.
+
+    Examples:
+      set_work_hours_guard(True)   # protect work hours — use /big-model or wait until 5pm
+      set_work_hours_guard(False)  # load any model any time (default)
+    """
+    write_work_hours_guard(enabled)
+    if enabled:
+        return (
+            "✅ Work-hours guard enabled.\n"
+            "   Large models (>22 GB) are blocked Mon–Fri 8am–5pm Mountain Time.\n"
+            "   Use /big-model to close other apps and load them cleanly,\n"
+            "   or load freely after 5pm / on weekends."
+        )
+    return (
+        "✅ Work-hours guard disabled.\n"
+        "   Any model can be loaded at any time."
     )
 
 
@@ -222,6 +327,7 @@ def get_config() -> str:
                 else "env var (MLX_DEFAULT_MODEL)" if _config.default_model
                 else "auto-detect"
             ),
+            "work_hours_guard": read_work_hours_guard(),
             "timeout_seconds": _config.timeout,
         },
         indent=2,
