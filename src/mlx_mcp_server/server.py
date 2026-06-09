@@ -11,6 +11,29 @@ _client = LLMClient(_config)
 
 mcp = FastMCP("mlx-mcp-server")
 
+
+def _model_description(model_id: str) -> str:
+    """Return a one-liner description based on model name patterns."""
+    m = model_id.lower()
+    if "coder" in m:
+        if any(x in m for x in ("7b", "9b")):
+            return "⚡ Speed — fast lookups, simple edits, ~30-50 tok/s"
+        if "14b" in m and "8bit" in m:
+            return "🎯 Quality — high-precision coding, balanced speed"
+        if "14b" in m:
+            return "⚖️  Balanced — everyday coding subagent, ~10-15 tok/s"
+        if "32b" in m:
+            return "🧠 Quality — complex code, architecture review, ~6-10 tok/s"
+    if "claude" in m or "distilled" in m:
+        return "🔮 Reasoning — Claude Opus knowledge, strong analysis"
+    if "35b" in m or "a3b" in m:
+        if "ud" in m or "3bit" in m:
+            return "🧠 Quality — 35B at 3-bit, smaller footprint than 4-bit"
+        return "🧠 Quality — highest capability, thinking model, slow"
+    if "27b" in m:
+        return "🔮 Reasoning — large, strong general reasoning"
+    return "🤖 General purpose"
+
 _QUICK_TEST_PROMPTS: dict[str, str] = {
     "hello": "Say hello and introduce yourself briefly.",
     "math": "What is 347 × 28? Show your working.",
@@ -169,16 +192,22 @@ async def health_check() -> str:
 
 @mcp.tool()
 async def list_models() -> str:
-    """List available models on the configured backend, marking the active one."""
+    """List available models with descriptions and active marker.
+
+    Use set_model("fragment") to switch — e.g. set_model("14b-4bit").
+    Or use the /switch-model slash command for an interactive picker.
+    """
     models = await _client.list_models()
     if not models:
         return "No models found. The backend may not support model listing."
     active = _client.get_active_model()
-    lines = []
-    for m in models:
+    lines = ["Local models (→ = active)\n"]
+    for i, m in enumerate(models, 1):
         marker = "→" if m.id == active else " "
-        lines.append(f"  {marker} {m.id}")
-    return f"Active model marked with →\n\n" + "\n".join(lines)
+        desc = _model_description(m.id)
+        lines.append(f"  {marker} {i}. {m.id}\n       {desc}")
+    lines.append("\nSwitch: set_model(\"<name or fragment>\")  |  /switch-model for interactive picker")
+    return "\n".join(lines)
 
 
 @mcp.resource("config://settings")
