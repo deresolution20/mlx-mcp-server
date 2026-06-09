@@ -4,11 +4,22 @@ import os
 import pytest
 import respx
 import httpx
+from unittest.mock import patch
+from pathlib import Path
 
 # Ensure default URL is set before importing server
 os.environ.setdefault("MLX_BASE_URL", "http://localhost:8080")
 
-from mlx_mcp_server.server import chat, quick_test, health_check, list_models, get_config, get_usage_docs
+from mlx_mcp_server.server import chat, quick_test, health_check, list_models, get_config, get_usage_docs, set_model
+
+
+@pytest.fixture(autouse=True)
+def no_runtime_file(tmp_path):
+    """Isolate all server tests from the real ~/.config/mlx-mcp/active_model file."""
+    model_file = tmp_path / "active_model"
+    with patch("mlx_mcp_server.runtime_config._CONFIG_DIR", tmp_path), \
+         patch("mlx_mcp_server.runtime_config._MODEL_FILE", model_file):
+        yield
 
 MOCK_CHAT_RESPONSE = {
     "choices": [{"message": {"content": "42 is the answer."}, "finish_reason": "stop"}],
@@ -99,9 +110,39 @@ def test_get_config_resource():
     data = json.loads(result)
     assert "base_url" in data
     assert "timeout_seconds" in data
+    assert "active_model" in data
+    assert "model_source" in data
     assert "api_key" not in data
 
 def test_get_usage_docs_resource():
     result = get_usage_docs()
     assert "mlx_lm.server" in result
     assert "MLX_BASE_URL" in result
+
+
+@respx.mock
+async def test_set_model_tool_sets_model():
+    respx.get("http://localhost:8080/v1/models").mock(
+        return_value=httpx.Response(200, json={"data": [
+            {"id": "Qwen2.5-Coder-32B-Instruct-4bit"},
+            {"id": "Qwen3.6-35B-A3B-4bit"},
+        ]})
+    )
+    result = await set_model("Qwen2.5-Coder-32B-Instruct-4bit")
+    assert "✅" in result
+    assert "Qwen2.5-Coder-32B-Instruct-4bit" in result
+    assert "→" in result  # arrow marks active model in list
+
+
+@respx.mock
+async def test_set_model_tool_warns_unknown_model():
+    respx.get("http://localhost:8080/v1/models").mock(
+        return_value=httpx.Response(200, json={"data": [{"id": "known-model"}]})
+    )
+    result = await set_model("typo-model-name")
+    assert "⚠️" in result
+
+
+async def test_set_model_tool_clears_override():
+    result = await set_model("")
+    assert "cleared" in result.lower()

@@ -95,6 +95,46 @@ async def quick_test(
 
 
 @mcp.tool()
+async def set_model(model_name: str) -> str:
+    """Switch the active model at runtime — no Claude Code restart needed.
+
+    Changes persist across restarts via ~/.config/mlx-mcp/active_model.
+    Pass an empty string to clear the override and fall back to auto-detection.
+
+    Example: set_model("Qwen2.5-Coder-32B-Instruct-4bit")
+    Clear:   set_model("")
+    """
+    _client.set_model(model_name)
+
+    if not model_name:
+        return (
+            "✅ Model override cleared.\n"
+            "Will auto-detect from backend on next request.\n\n"
+            "Tip: call list_models to see what's available."
+        )
+
+    # Show available models so user can confirm the name was correct.
+    try:
+        models = await _client.list_models()
+        model_ids = [m.id for m in models]
+        known = model_name in model_ids
+        model_list = "\n".join(
+            f"  {'→' if m.id == model_name else ' '} {m.id}"
+            for m in models
+        )
+        warning = "" if known else f"\n⚠️  '{model_name}' not found in model list — double-check the name.\n"
+    except Exception:
+        model_list = "  (could not reach backend to fetch model list)"
+        warning = ""
+
+    return (
+        f"✅ Active model set to: {model_name}\n"
+        f"   Persisted to ~/.config/mlx-mcp/active_model{warning}\n\n"
+        f"Available models:\n{model_list}"
+    )
+
+
+@mcp.tool()
 async def health_check() -> str:
     """Check whether the configured LLM backend is reachable."""
     result = await _client.health_check()
@@ -116,7 +156,12 @@ def get_config() -> str:
     return json.dumps(
         {
             "base_url": _config.base_url,
-            "default_model": _config.default_model or "(none — backend decides)",
+            "active_model": _client.get_active_model(),
+            "model_source": (
+                "runtime (set_model)" if _client._runtime_model
+                else "env var (MLX_DEFAULT_MODEL)" if _config.default_model
+                else "auto-detect"
+            ),
             "timeout_seconds": _config.timeout,
         },
         indent=2,

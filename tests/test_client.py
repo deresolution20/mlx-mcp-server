@@ -2,8 +2,19 @@
 import pytest
 import respx
 import httpx
+from unittest.mock import patch
 from mlx_mcp_server.client import LLMClient, ChatResponse, ModelInfo
 from mlx_mcp_server.config import Config
+
+
+@pytest.fixture(autouse=True)
+def no_runtime_file(tmp_path):
+    """Isolate all client tests from the real ~/.config/mlx-mcp/active_model file."""
+    model_file = tmp_path / "active_model"
+    with patch("mlx_mcp_server.runtime_config._CONFIG_DIR", tmp_path), \
+         patch("mlx_mcp_server.runtime_config._MODEL_FILE", model_file):
+        yield
+
 
 @pytest.fixture
 def config():
@@ -240,3 +251,59 @@ async def test_health_check_unreachable(client):
     result = await client.health_check()
     assert result["status"] == "unreachable"
     assert "hint" in result
+
+
+# ---------------------------------------------------------------------------
+# set_model / runtime model switching tests
+# ---------------------------------------------------------------------------
+
+def test_set_model_updates_runtime_model(client):
+    """set_model() updates the in-memory runtime model immediately."""
+    assert client._runtime_model == ""
+    client.set_model("Qwen2.5-Coder-32B-Instruct-4bit")
+    assert client._runtime_model == "Qwen2.5-Coder-32B-Instruct-4bit"
+
+
+def test_set_model_clears_auto_detect_cache(client):
+    """set_model() resets the auto-detect cache so a fresh query runs next time."""
+    client._resolved_model = "stale-model"
+    client._model_resolved = True
+    client.set_model("new-model")
+    assert client._resolved_model is None
+    assert client._model_resolved is False
+
+
+def test_set_model_clear_resets_runtime(client):
+    """set_model('') clears the runtime override."""
+    client.set_model("some-model")
+    client.set_model("")
+    assert client._runtime_model == ""
+
+
+@respx.mock
+async def test_set_model_takes_priority_over_env_var():
+    """Runtime model takes priority over MLX_DEFAULT_MODEL env var."""
+    config = Config(base_url="http://localhost:8080", default_model="env-model", api_key="", timeout=5)
+    client = LLMClient(config)
+    client.set_model("runtime-model")
+
+    chat_route = respx.post("http://localhost:8080/v1/chat/completions").mock(
+        return_value=httpx.Response(200, json={
+            "choices": [{"message": {"content": "hi"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 5, "completion_tokens": 1, "total_tokens": 6},
+        })
+    )
+    await client.chat("hello")
+    import json as _json
+    body = _json.loads(chat_route.calls[0].request.content)
+    assert body["model"] == "runtime-model"
+
+
+@respx.mock
+async def test_get_active_model_reflects_runtime(client):
+    """get_active_model() returns the runtime model when set."""
+    assert client.get_active_model() == "(auto-detect)"
+    client.set_model("test-model")
+    assert client.get_active_model() == "test-model"
+    client.set_model("")
+    assert client.get_active_model() == "(auto-detect)"

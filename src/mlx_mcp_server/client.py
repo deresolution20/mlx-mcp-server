@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import httpx
 
 from .config import Config
+from .runtime_config import read_runtime_model, write_runtime_model
 
 
 @dataclass
@@ -25,7 +26,10 @@ class ModelInfo:
 class LLMClient:
     def __init__(self, config: Config) -> None:
         self.config = config
-        self._resolved_model: str | None = None
+        # Runtime override: set_model() writes here + to disk; loaded from disk at startup.
+        # Priority: _runtime_model > config.default_model (env) > auto-detect.
+        self._runtime_model: str = read_runtime_model()
+        self._resolved_model: str | None = None  # cached auto-detect result
         self._model_resolved: bool = False
         headers: dict[str, str] = {}
         if config.api_key:
@@ -37,8 +41,25 @@ class LLMClient:
             trust_env=False,  # don't inherit HTTP_PROXY from environment (avoids leaking api_key to proxy)
         )
 
+    def set_model(self, model: str) -> None:
+        """Switch the active model at runtime. Persists to disk across restarts.
+
+        Pass '' to clear the override and fall back to env var / auto-detect.
+        """
+        self._runtime_model = model
+        # Reset auto-detect cache so a subsequent clear() re-queries the backend.
+        self._resolved_model = None
+        self._model_resolved = False
+        write_runtime_model(model)
+
+    def get_active_model(self) -> str:
+        """Return the currently configured model name (not async — sync inspection only)."""
+        return self._runtime_model or self.config.default_model or "(auto-detect)"
+
     async def _get_model(self) -> str:
-        """Return model to use: explicit config > cached auto-detect > live /v1/models query."""
+        """Priority: runtime override → env var → cached auto-detect → live /v1/models."""
+        if self._runtime_model:
+            return self._runtime_model
         if self.config.default_model:
             return self.config.default_model
         if not self._model_resolved:
