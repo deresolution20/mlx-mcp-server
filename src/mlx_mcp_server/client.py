@@ -121,25 +121,24 @@ class LLMClient:
         top_k: int = 0,
         enable_thinking: bool = False,
     ) -> ChatResponse:
-        # Layer 3: inject /no_think token into the user message.
-        # Qwen3's chat template checks for this token in the conversation text.
-        # oMLX ignores enable_thinking in the payload, but this works at the token level.
-        no_think_prefix = "/no_think\n" if not enable_thinking else ""
-
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": no_think_prefix + message})
+        messages.append({"role": "user", "content": message})
 
         payload: dict = {
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "top_p": top_p,
-            "enable_thinking": enable_thinking,  # Qwen3: suppresses chain-of-thought when False
         }
         if top_k > 0:
             payload["top_k"] = top_k
+        if enable_thinking:
+            # Only send enable_thinking when explicitly True — unknown fields cause 400s
+            # on models that don't support it (e.g. Gemma 4). Qwen3-Coder models don't
+            # need this at all since they default to non-thinking mode.
+            payload["enable_thinking"] = True
 
         model = await self._get_model()
         if model:

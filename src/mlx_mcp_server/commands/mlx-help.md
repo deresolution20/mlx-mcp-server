@@ -51,13 +51,10 @@ MCP TOOLS
 ──────────────────────────────────────────────────────
 
 MODEL LINEUP
-  ⚡ DeepSeek-Coder-V2-Lite   ~135 tok/s  turbo — quick lookups & boilerplate
-  ⚡ Qwen2.5-Coder-7B         ~80 tok/s   fast — solid everyday quality
-  ⚖️  Qwen2.5-Coder-14B        ~28 tok/s   default — reliable for most tasks
-  🧠 Qwen2.5-Coder-32B        ~19 tok/s   quality — complex & multi-file
-  🔮 gemma-3-27b-it-qat       ~35 tok/s   best quality — use off-hours or /big-model
-
-  Tip: /big-model frees ~8 GB of RAM to safely run the 6-bit 32B (~25 GB).
+  ⚡ DeepSeek-Coder-V2-Lite         ~135 tok/s  turbo — quick lookups & boilerplate
+  ⚡ Qwen2.5-Coder-7B               ~80 tok/s   fast — speed fallback
+  ⚖️  Qwen2.5-Coder-14B              ~28 tok/s   default — reliable for most tasks
+  🧠 Qwen3-Coder-30B-A3B-MLX-4bit  ~51 tok/s   quality — best coding, MoE, no thinking mode
 ══════════════════════════════════════════════════════
 ```
 

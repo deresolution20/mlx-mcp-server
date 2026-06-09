@@ -370,7 +370,7 @@ def test_help_output_covers_all_sections(capsys):
     # Model lineup
     assert "DeepSeek" in out
     assert "Qwen2.5-Coder-14B" in out
-    assert "gemma" in out
+    assert "Qwen3-Coder-30B" in out
 
     # Links
     assert "github.com" in out

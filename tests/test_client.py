@@ -53,10 +53,10 @@ async def test_chat_sends_system_prompt(client):
     import json
     body = json.loads(sent.content)
     assert body["messages"][0] == {"role": "system", "content": "You are a helpful assistant."}
-    # /no_think prefix is prepended to suppress Qwen3 thinking mode via token injection
-    assert body["messages"][1]["role"] == "user"
-    assert body["messages"][1]["content"].endswith("Hello")
-    assert "/no_think" in body["messages"][1]["content"]
+    assert body["messages"][1] == {"role": "user", "content": "Hello"}
+    # enable_thinking is not sent by default — omitting it avoids 400s on models
+    # that don't recognise the field (e.g. Gemma 4)
+    assert "enable_thinking" not in body
 
 @respx.mock
 async def test_chat_omits_empty_system_prompt(client):

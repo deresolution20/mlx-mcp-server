@@ -21,24 +21,24 @@ def _model_description(model_id: str) -> str:
     if "deepseek" in m and "lite" in m:
         return "⚡ Turbo — ~135 tok/s, instant subagent calls, quick lookups & boilerplate"
 
-    # Gemma 3 family
-    if "gemma" in m:
-        if "27b" in m:
-            return "🔮 Off-hours — ~35 tok/s, best quality, great for PR review & deep refactors"
-        if "12b" in m:
-            return "🔮 Quality — ~55 tok/s, strong instruction following"
-        return "🤖 Gemma"
+    # Qwen3-Coder family — newer, non-thinking, excellent quality
+    if "qwen3" in m and "coder" in m:
+        if "30b" in m or "a3b" in m:
+            return "🧠 Quality — ~51 tok/s, best coding quality, MoE (3B active), no thinking mode"
+        return "💻 Qwen3-Coder"
 
     # Qwen2.5-Coder family — reliable, no thinking mode
     if "qwen" in m and "coder" in m:
         if "7b" in m:
-            return "⚡ Fast — ~80 tok/s, ultra-light, quick answers with solid code quality"
+            return "⚡ Fast — ~80 tok/s, speed fallback, solid code quality"
         if "14b" in m:
             return "⚖️  Everyday — ~28 tok/s, reliable default for most coding tasks"
-        if "32b" in m and "6bit" in m:
-            return "🏆 Max quality — ~16 tok/s, needs /big-model mode (25 GB RAM)"
         if "32b" in m:
             return "🧠 Quality — ~19 tok/s, complex code & multi-file reasoning"
+
+    # Gemma family — kept for reference, slower than Qwen3-Coder on this hardware
+    if "gemma" in m:
+        return "🤖 Gemma"
 
     # Generic fallbacks
     if "coder" in m:
@@ -529,14 +529,10 @@ MCP TOOLS  (Claude Code calls these automatically via the mlx server)
 ──────────────────────────────────────────────────────────────
 
 MODEL LINEUP
-  ⚡ DeepSeek-Coder-V2-Lite-Instruct-4bit-mlx   ~135 tok/s  turbo, quick lookups
-  ⚡ Qwen2.5-Coder-7B-Instruct-4bit             ~80 tok/s   fast, solid quality
+  ⚡ DeepSeek-Coder-V2-Lite-Instruct-4bit-mlx   ~135 tok/s  turbo — quick lookups & boilerplate
+  ⚡ Qwen2.5-Coder-7B-Instruct-4bit             ~80 tok/s   fast — speed fallback
   ⚖️  Qwen2.5-Coder-14B-Instruct-4bit            ~28 tok/s   everyday default
-  🧠 Qwen2.5-Coder-32B-Instruct-4bit            ~19 tok/s   complex tasks
-  🔮 gemma-3-27b-it-qat-4bit                    ~35 tok/s   best quality, off-hours
-
-  Big models (32B 6-bit, ~25 GB) → use /big-model to free RAM first,
-  or run outside work hours when swap speed is acceptable.
+  🧠 Qwen3-Coder-30B-A3B-Instruct-MLX-4bit      ~51 tok/s   quality — best coding, MoE, no thinking mode
 
 ──────────────────────────────────────────────────────────────
 
