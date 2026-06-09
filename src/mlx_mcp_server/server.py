@@ -98,38 +98,64 @@ async def quick_test(
 async def set_model(model_name: str) -> str:
     """Switch the active model at runtime — no Claude Code restart needed.
 
+    Accepts the full model name OR a case-insensitive fragment (fuzzy match).
     Changes persist across restarts via ~/.config/mlx-mcp/active_model.
     Pass an empty string to clear the override and fall back to auto-detection.
 
-    Example: set_model("Qwen2.5-Coder-32B-Instruct-4bit")
-    Clear:   set_model("")
+    Examples:
+      set_model("coder-14b")           # matches Qwen2.5-Coder-14B-Instruct-4bit
+      set_model("35b")                 # matches Qwen3.6-35B-A3B-4bit
+      set_model("Qwen2.5-Coder-32B-Instruct-4bit")  # exact name also works
+      set_model("")                    # clear override, fall back to auto-detect
     """
-    _client.set_model(model_name)
-
     if not model_name:
+        _client.set_model("")
         return (
             "✅ Model override cleared.\n"
             "Will auto-detect from backend on next request.\n\n"
             "Tip: call list_models to see what's available."
         )
 
-    # Show available models so user can confirm the name was correct.
+    # Fetch available models for fuzzy matching + confirmation display.
     try:
         models = await _client.list_models()
         model_ids = [m.id for m in models]
-        known = model_name in model_ids
-        model_list = "\n".join(
-            f"  {'→' if m.id == model_name else ' '} {m.id}"
-            for m in models
-        )
-        warning = "" if known else f"\n⚠️  '{model_name}' not found in model list — double-check the name.\n"
     except Exception:
-        model_list = "  (could not reach backend to fetch model list)"
-        warning = ""
+        # Backend unreachable — set the name as-is and warn.
+        _client.set_model(model_name)
+        return (
+            f"✅ Active model set to: {model_name}\n"
+            "   (Could not reach backend to validate — double-check the name with list_models)"
+        )
 
+    # Resolve: exact match first, then case-insensitive substring match.
+    resolved = model_name  # default: use as given
+    if model_name not in model_ids:
+        fragment = model_name.lower()
+        matches = [mid for mid in model_ids if fragment in mid.lower()]
+        if len(matches) == 1:
+            resolved = matches[0]
+        elif len(matches) > 1:
+            options = "\n".join(f"  - {m}" for m in matches)
+            return (
+                f"⚠️  '{model_name}' matches {len(matches)} models — be more specific:\n{options}"
+            )
+        else:
+            options = "\n".join(f"  - {mid}" for mid in model_ids)
+            return (
+                f"❌ No model matching '{model_name}' found.\n\n"
+                f"Available models:\n{options}"
+            )
+
+    _client.set_model(resolved)
+    model_list = "\n".join(
+        f"  {'→' if mid == resolved else ' '} {mid}"
+        for mid in model_ids
+    )
+    suffix = f" (matched from '{model_name}')" if resolved != model_name else ""
     return (
-        f"✅ Active model set to: {model_name}\n"
-        f"   Persisted to ~/.config/mlx-mcp/active_model{warning}\n\n"
+        f"✅ Active model set to: {resolved}{suffix}\n"
+        f"   Persisted to ~/.config/mlx-mcp/active_model\n\n"
         f"Available models:\n{model_list}"
     )
 
@@ -143,11 +169,16 @@ async def health_check() -> str:
 
 @mcp.tool()
 async def list_models() -> str:
-    """List available models on the configured backend."""
+    """List available models on the configured backend, marking the active one."""
     models = await _client.list_models()
     if not models:
         return "No models found. The backend may not support model listing."
-    return "\n".join(f"- {m.id}" for m in models)
+    active = _client.get_active_model()
+    lines = []
+    for m in models:
+        marker = "→" if m.id == active else " "
+        lines.append(f"  {marker} {m.id}")
+    return f"Active model marked with →\n\n" + "\n".join(lines)
 
 
 @mcp.resource("config://settings")

@@ -135,12 +135,40 @@ async def test_set_model_tool_sets_model():
 
 
 @respx.mock
-async def test_set_model_tool_warns_unknown_model():
+async def test_set_model_tool_no_match_shows_error():
     respx.get("http://localhost:8080/v1/models").mock(
         return_value=httpx.Response(200, json={"data": [{"id": "known-model"}]})
     )
     result = await set_model("typo-model-name")
+    assert "❌" in result
+    assert "known-model" in result
+
+
+@respx.mock
+async def test_set_model_tool_fuzzy_match():
+    respx.get("http://localhost:8080/v1/models").mock(
+        return_value=httpx.Response(200, json={"data": [
+            {"id": "Qwen2.5-Coder-14B-Instruct-4bit"},
+            {"id": "Qwen2.5-Coder-32B-Instruct-4bit"},
+        ]})
+    )
+    result = await set_model("14b")
+    assert "✅" in result
+    assert "Qwen2.5-Coder-14B-Instruct-4bit" in result
+    assert "matched from '14b'" in result
+
+
+@respx.mock
+async def test_set_model_tool_ambiguous_match_warns():
+    respx.get("http://localhost:8080/v1/models").mock(
+        return_value=httpx.Response(200, json={"data": [
+            {"id": "Qwen2.5-Coder-14B-Instruct-4bit"},
+            {"id": "Qwen2.5-Coder-32B-Instruct-4bit"},
+        ]})
+    )
+    result = await set_model("coder")  # matches both
     assert "⚠️" in result
+    assert "2 models" in result
 
 
 async def test_set_model_tool_clears_override():
