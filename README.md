@@ -4,6 +4,8 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that gi
 
 **The idea:** Claude stays Claude. Your local model becomes a tool Claude can call — fast, private, free, and clearly labelled `🏠 LOCAL` in every response.
 
+[![PyPI](https://img.shields.io/pypi/v/mlx-mcp-server)](https://pypi.org/project/mlx-mcp-server/)
+
 ---
 
 ## How it works
