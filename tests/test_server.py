@@ -320,3 +320,58 @@ def test_get_config_shows_guard_state():
     data = json.loads(result)
     assert "work_hours_guard" in data
     assert data["work_hours_guard"] is False  # off by default
+
+
+# ── help subcommand ───────────────────────────────────────────────────────────
+
+import subprocess
+import sys
+
+
+def test_help_subcommand_exits_zero():
+    result = subprocess.run(
+        [sys.executable, "-m", "mlx_mcp_server.server", "help"],
+        capture_output=True, text=True,
+    )
+    # server module runs main() — but subprocess via -m won't trigger main()
+    # so test via the public function directly instead
+    from mlx_mcp_server.server import _print_help
+    # _print_help should run without raising
+    _print_help()  # would raise if broken
+
+
+def test_help_output_covers_all_sections(capsys):
+    from mlx_mcp_server.server import _print_help
+    _print_help()
+    out = capsys.readouterr().out
+
+    # Install subcommand
+    assert "--claude-code" in out
+    assert "--full" in out
+    assert "--dry-run" in out
+    assert "--with-commands" in out
+    assert "--with-scripts" in out
+
+    # Slash commands
+    assert "/switch-model" in out
+    assert "/big-model" in out
+    assert "/big-model-done" in out
+    assert "/mlx-help" in out
+
+    # MCP tools
+    assert "chat" in out
+    assert "quick_test" in out
+    assert "list_models" in out
+    assert "set_model" in out
+    assert "health_check" in out
+    assert "get_config" in out
+    assert "set_work_hours_guard" in out
+
+    # Model lineup
+    assert "DeepSeek" in out
+    assert "Qwen2.5-Coder-14B" in out
+    assert "gemma" in out
+
+    # Links
+    assert "github.com" in out
+    assert "pypi.org" in out

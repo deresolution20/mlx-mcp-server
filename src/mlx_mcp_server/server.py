@@ -430,6 +430,8 @@ def main() -> None:
         help="Print the config that would be written without modifying any files",
     )
 
+    subparsers.add_parser("help", help="Show commands, MCP tools, and usage examples")
+
     args = parser.parse_args()
 
     if args.command == "install":
@@ -448,5 +450,97 @@ def main() -> None:
             with_commands=with_commands,
             with_scripts=with_scripts,
         )
+    elif args.command == "help":
+        _print_help()
     else:
         mcp.run()
+
+
+def _print_help() -> None:
+    print("""
+mlx-mcp-server — local LLM bridge for Claude Code
+===================================================
+
+INSTALL SUBCOMMAND
+  Wire up the MCP server, slash commands, and shell scripts in one step.
+
+  Quick start (recommended):
+    mlx-mcp-server install --claude-code --full
+
+  Options:
+    --claude-code        Target Claude Code (~/.claude/settings.json)
+                         Omit to target Claude Desktop instead
+    --base-url URL       oMLX base URL  (default: http://localhost:8080)
+    --model NAME         Pin a default model  (auto-detected if omitted)
+    --api-key KEY        API key for oMLX  (or set MLX_API_KEY env var)
+    --with-commands      Install slash commands → ~/.claude/commands/
+    --with-scripts       Install Big Model Mode scripts → ~/bin/
+    --full               Install everything (--with-commands + --with-scripts)
+    --dry-run            Preview what would be written without touching files
+
+  Examples:
+    # Full install for Claude Code
+    mlx-mcp-server install --claude-code --full
+
+    # Claude Desktop only, custom URL
+    mlx-mcp-server install --base-url http://localhost:8000
+
+    # Preview without writing
+    mlx-mcp-server install --claude-code --full --dry-run
+
+    # API key via env var (keeps key out of shell history)
+    MLX_API_KEY=my-key mlx-mcp-server install --claude-code --full
+
+──────────────────────────────────────────────────────────────
+
+SLASH COMMANDS  (inside Claude Code, type /<name>)
+  /switch-model      List all available models and switch to one interactively
+  /big-model         Close RAM-heavy apps, load the 6-bit 32B model for max quality
+  /big-model-done    Switch back to the fast 4-bit model and reopen all apps
+  /mlx-help          Show this reference inside Claude Code
+
+──────────────────────────────────────────────────────────────
+
+MCP TOOLS  (Claude Code calls these automatically via the mlx server)
+  chat                Send a prompt to the local LLM
+                        chat(message="explain this function", system_prompt="be concise")
+
+  quick_test          Run a canned test to verify the active model is responding
+                        quick_test(test_type="code_review")
+                        test_type options: hello | code_review | math
+
+  list_models         List all models available in oMLX with descriptions
+                        list_models()
+
+  set_model           Switch the active model by name or fragment
+                        set_model(model_name="14b")
+                        set_model(model_name="Qwen2.5-Coder-32B-Instruct-6bit", force=True)
+
+  health_check        Confirm oMLX is reachable and responding
+                        health_check()
+
+  get_config          Show current server config (URL, model, work-hours guard)
+                        get_config()
+
+  set_work_hours_guard  Toggle the work-hours guard on or off
+                          set_work_hours_guard(enabled=True)   # block big models 8am-5pm MT
+                          set_work_hours_guard(enabled=False)  # always allow
+
+──────────────────────────────────────────────────────────────
+
+MODEL LINEUP
+  ⚡ DeepSeek-Coder-V2-Lite-Instruct-4bit-mlx   ~135 tok/s  turbo, quick lookups
+  ⚡ Qwen2.5-Coder-7B-Instruct-4bit             ~80 tok/s   fast, solid quality
+  ⚖️  Qwen2.5-Coder-14B-Instruct-4bit            ~28 tok/s   everyday default
+  🧠 Qwen2.5-Coder-32B-Instruct-4bit            ~19 tok/s   complex tasks
+  🔮 gemma-3-27b-it-qat-4bit                    ~35 tok/s   best quality, off-hours
+
+  Big models (32B 6-bit, ~25 GB) → use /big-model to free RAM first,
+  or run outside work hours when swap speed is acceptable.
+
+──────────────────────────────────────────────────────────────
+
+MORE INFO
+  GitHub:  https://github.com/deresolution20/mlx-mcp-server
+  PyPI:    https://pypi.org/project/mlx-mcp-server/
+""".strip())

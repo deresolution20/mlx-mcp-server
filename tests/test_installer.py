@@ -360,6 +360,7 @@ def test_bundled_commands_include_expected():
     assert "switch-model" in names
     assert "big-model" in names
     assert "big-model-done" in names
+    assert "mlx-help" in names
 
 
 def test_bundled_scripts_include_expected():
