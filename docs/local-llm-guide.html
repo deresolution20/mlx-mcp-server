@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local LLMs: What Your Team Needs to Know</title>
+  <style>
+    /* ── Reset & base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #22263a;
+      --border:    #2e3350;
+      --text:      #e2e4f0;
+      --muted:     #7b82a8;
+      --accent:    #7c6af7;
+      --accent2:   #5eead4;
+      --accent3:   #f472b6;
+      --yellow:    #fbbf24;
+      --green:     #34d399;
+      --red:       #f87171;
+      --orange:    #fb923c;
+      --font:      'Inter', system-ui, -apple-system, sans-serif;
+      --mono:      'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    /* ── Layout ───────────────────────────────────────── */
+    .page-wrap {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────── */
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 2rem 1.25rem;
+    }
+
+    .sidebar-logo {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .sidebar nav ul { list-style: none; }
+    .sidebar nav > ul > li { margin-bottom: 0.1rem; }
+
+    .sidebar nav a {
+      display: block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar nav a:hover { background: var(--surface2); color: var(--text); }
+    .sidebar nav a.active { background: var(--surface2); color: var(--accent); }
+
+    .sidebar nav ul ul { margin-left: 0.75rem; margin-top: 0.1rem; }
+    .sidebar nav ul ul a { font-size: 0.8rem; }
+
+    /* ── Main ─────────────────────────────────────────── */
+    main {
+      max-width: 860px;
+      padding: 3rem 3rem 6rem;
+    }
+
+    /* ── Hero ─────────────────────────────────────────── */
+    .hero {
+      margin-bottom: 3.5rem;
+      padding-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(124, 106, 247, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(124, 106, 247, 0.3);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.8rem;
+      border-radius: 100px;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #e2e4f0 0%, #7c6af7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 640px;
+    }
+
+    /* ── Sections ─────────────────────────────────────── */
+    section {
+      margin-bottom: 4rem;
+    }
+
+    section h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    section h2 .icon {
+      font-size: 1.3rem;
+    }
+
+    section h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--accent2);
+      margin: 1.75rem 0 0.6rem;
+    }
+
+    p { margin-bottom: 1rem; color: var(--text); }
+    p:last-child { margin-bottom: 0; }
+
+    /* ── Callout boxes ────────────────────────────────── */
+    .callout {
+      border-radius: 10px;
+      padding: 1.1rem 1.3rem;
+      margin: 1.5rem 0;
+      border-left: 3px solid;
+      font-size: 0.95rem;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .callout.info {
+      background: rgba(94, 234, 212, 0.07);
+      border-color: var(--accent2);
+    }
+    .callout.info .callout-title { color: var(--accent2); }
+
+    .callout.warning {
+      background: rgba(251, 191, 36, 0.07);
+      border-color: var(--yellow);
+    }
+    .callout.warning .callout-title { color: var(--yellow); }
+
+    .callout.tip {
+      background: rgba(124, 106, 247, 0.07);
+      border-color: var(--accent);
+    }
+    .callout.tip .callout-title { color: var(--accent); }
+
+    .callout.danger {
+      background: rgba(248, 113, 113, 0.07);
+      border-color: var(--red);
+    }
+    .callout.danger .callout-title { color: var(--red); }
+
+    /* ── Analogy boxes ────────────────────────────────── */
+    .analogy {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .analogy-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 0.4rem;
+    }
+
+    .analogy p { color: var(--muted); font-size: 0.95rem; margin: 0; }
+    .analogy strong { color: var(--text); }
+
+    /* ── Tables ───────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; border-radius: 10px; border: 1px solid var(--border); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+
+    thead {
+      background: var(--surface2);
+    }
+
+    th {
+      text-align: left;
+      padding: 0.8rem 1rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 5px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-green  { background: rgba(52,211,153,0.15); color: var(--green); }
+    .badge-yellow { background: rgba(251,191,36,0.15); color: var(--yellow); }
+    .badge-red    { background: rgba(248,113,113,0.15); color: var(--red); }
+    .badge-purple { background: rgba(124,106,247,0.15); color: var(--accent); }
+    .badge-cyan   { background: rgba(94,234,212,0.15); color: var(--accent2); }
+    .badge-orange { background: rgba(251,146,60,0.15); color: var(--orange); }
+
+    /* ── Visual diagrams ──────────────────────────────── */
+    .diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin: 1.5rem 0;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 2;
+      overflow-x: auto;
+    }
+
+    .diagram .label { color: var(--text); font-weight: 600; }
+    .diagram .hi { color: var(--accent2); }
+    .diagram .mid { color: var(--yellow); }
+    .diagram .lo { color: var(--red); }
+    .diagram .dim { color: var(--border); }
+
+    /* ── Code inline ──────────────────────────────────── */
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+      color: var(--accent2);
+    }
+
+    /* ── Model cards ──────────────────────────────────── */
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .model-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem 1.2rem;
+      transition: border-color 0.2s;
+    }
+
+    .model-card:hover { border-color: var(--accent); }
+    .model-card.highlight { border-color: var(--accent2); }
+
+    .model-card-icon { font-size: 1.6rem; margin-bottom: 0.5rem; }
+
+    .model-card-name {
+      font-size: 0.78rem;
+      font-family: var(--mono);
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+
+    .model-card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .model-card-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .model-card-stat {
+      margin-top: 0.75rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Comparison bar ───────────────────────────────── */
+    .compare-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0.4rem 0;
+      font-size: 0.88rem;
+    }
+
+    .compare-bar .bar-label {
+      width: 110px;
+      color: var(--muted);
+      flex-shrink: 0;
+      text-align: right;
+      font-size: 0.8rem;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width 0.3s;
+    }
+
+    .bar-fill.green  { background: var(--green); }
+    .bar-fill.yellow { background: var(--yellow); }
+    .bar-fill.red    { background: var(--red); }
+    .bar-fill.purple { background: var(--accent); }
+    .bar-fill.cyan   { background: var(--accent2); }
+
+    .bar-value {
+      width: 80px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    /* ── Glossary ─────────────────────────────────────── */
+    .glossary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .glossary-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+    }
+
+    .glossary-term {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--accent2);
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .glossary-def {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Cheat sheet ──────────────────────────────────── */
+    .cheatsheet {
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin: 1.5rem 0;
+    }
+
+    .cheatsheet h3 {
+      color: var(--accent);
+      margin-top: 0;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .cheatsheet ul {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .cheatsheet li {
+      font-size: 0.88rem;
+      color: var(--muted);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .cheatsheet li::before {
+      content: '→';
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+
+    .cheatsheet li strong { color: var(--text); }
+
+    /* ── Footer ───────────────────────────────────────── */
+    .doc-footer {
+      margin-top: 4rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ── Responsive ───────────────────────────────────── */
+    @media (max-width: 768px) {
+      .page-wrap { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      main { padding: 2rem 1.5rem 4rem; }
+      .glossary-grid { grid-template-columns: 1fr; }
+      .cheatsheet ul { grid-template-columns: 1fr; }
+    }
+
+    /* ── Scroll spy ──────────────────────────────────── */
+    :target { scroll-margin-top: 2rem; }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- ── Sidebar ─────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">mlx-mcp-server · Docs</div>
+    <nav>
+      <ul>
+        <li><a href="#what-is-a-local-llm">What is a local LLM?</a></li>
+        <li><a href="#parameters">Model sizes (7B, 32B…)</a>
+          <ul>
+            <li><a href="#parameters-analogy">The neuron analogy</a></li>
+            <li><a href="#parameters-size-guide">Size guide</a></li>
+          </ul>
+        </li>
+        <li><a href="#quantization">Quantization (4-bit, 8-bit…)</a>
+          <ul>
+            <li><a href="#quant-tradeoffs">Speed vs quality tradeoff</a></li>
+            <li><a href="#quant-cheatsheet">Quick reference</a></li>
+          </ul>
+        </li>
+        <li><a href="#dense-vs-moe">Dense vs MoE</a>
+          <ul>
+            <li><a href="#dense-models">Dense models</a></li>
+            <li><a href="#moe-models">Mixture of Experts</a></li>
+            <li><a href="#moe-tradeoffs">When to use which</a></li>
+          </ul>
+        </li>
+        <li><a href="#memory">Memory requirements</a></li>
+        <li><a href="#speed">Speed (tok/s)</a></li>
+        <li><a href="#apple-silicon">Apple Silicon advantage</a></li>
+        <li><a href="#our-models">Models we use</a></li>
+        <li><a href="#decision-guide">Decision guide</a></li>
+        <li><a href="#glossary">Glossary</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- ── Main content ────────────────────────────────── -->
+  <main>
+
+    <div class="hero">
+      <div class="hero-badge">Team Knowledge Base · Draft</div>
+      <h1>Local LLMs: What Your Team Needs to Know</h1>
+      <p>A plain-English guide to running AI models on your own hardware — no cloud required, no data leaving your machine. Written for engineers who haven't dug into this before.</p>
+    </div>
+
+
+    <!-- ── 1. What is a local LLM ──────────────────── -->
+    <section id="what-is-a-local-llm">
+      <h2><span class="icon">🧠</span> What is a local LLM?</h2>
+
+      <p>An <strong>LLM (Large Language Model)</strong> is the AI engine that powers tools like ChatGPT and Claude. Normally these run on massive server clusters owned by companies like OpenAI or Anthropic — you send your prompt over the internet, their servers think about it, and send back a response.</p>
+
+      <p>A <strong>local LLM</strong> runs that same kind of model directly on your laptop or workstation. No internet required. Your prompts never leave the machine.</p>
+
+      <div class="callout info">
+        <div class="callout-title">Why does this matter for us?</div>
+        Three reasons: <strong>privacy</strong> (code never leaves the machine), <strong>cost</strong> (no per-token API bill once the hardware is there), and <strong>latency</strong> (no network hop — the model responds in milliseconds, not seconds).
+      </div>
+
+      <p>The tradeoff is that local models are generally <em>smaller</em> than cloud models — you're limited by how much RAM your machine has. A laptop that can comfortably run a 32-billion-parameter model is excellent; GPT-4 is rumored to be around 1.7 trillion parameters. So we're working with capable but not frontier-sized models.</p>
+
+      <p>That said, for everyday coding tasks — reviewing diffs, generating boilerplate, explaining error messages, writing tests — a well-chosen local model is genuinely useful. That's the point of this setup.</p>
+    </section>
+
+
+    <!-- ── 2. Parameters ────────────────────────────── -->
+    <section id="parameters">
+      <h2><span class="icon">📐</span> Model sizes: what "7B" and "32B" mean</h2>
+
+      <p>When you see <code>Qwen2.5-Coder-<strong>14B</strong>-Instruct</code>, the <strong>14B</strong> stands for <strong>14 billion parameters</strong>.</p>
+
+      <h3 id="parameters-analogy">The neuron analogy</h3>
+
+      <div class="analogy">
+        <div class="analogy-label">Analogy</div>
+        <p>Think of parameters like <strong>individual connection strengths in a brain</strong>. A human brain has roughly 100 trillion synapses. A 14B model has 14 billion learned numerical weights — each one encoding a tiny piece of knowledge about language, syntax, logic, or code.</p>
+        <p style="margin-top:0.6rem">More parameters = more capacity to store patterns = generally smarter output. But also: more memory needed, and more computation per token generated.</p>
+      </div>
+
+      <p>Parameters are set during <strong>training</strong> (which you don't do — that's already done by the researchers at Alibaba, Meta, Mistral, etc.). When you download a model, you're downloading those billions of numbers as a file. Running the model is just: feed it your prompt, multiply through all those weights, get a prediction for the next token, repeat.</p>
+
+      <h3 id="parameters-size-guide">Size guide</h3>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Size</th>
+              <th>Example</th>
+              <th>Capability</th>
+              <th>Fits on…</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1B–3B</strong></td>
+              <td>Qwen2.5-Coder-1.5B</td>
+              <td>Simple autocomplete, single-function edits</td>
+              <td>Any modern laptop (2–3 GB)</td>
+            </tr>
+            <tr>
+              <td><strong>7B–9B</strong></td>
+              <td>Llama-3.2-8B, Mistral-7B</td>
+              <td>Basic Q&amp;A, short code generation</td>
+              <td>8 GB RAM minimum</td>
+            </tr>
+            <tr>
+              <td><strong>14B</strong></td>
+              <td>Qwen2.5-Coder-14B</td>
+              <td>Solid everyday coding, most tasks</td>
+              <td>16 GB RAM comfortable</td>
+            </tr>
+            <tr>
+              <td><strong>32B</strong></td>
+              <td>Qwen2.5-Coder-32B</td>
+              <td>Complex code, architecture reasoning</td>
+              <td>32 GB RAM (your M5 Mac)</td>
+            </tr>
+            <tr>
+              <td><strong>70B+</strong></td>
+              <td>Llama-3.3-70B, Qwen2.5-72B</td>
+              <td>Near-frontier quality</td>
+              <td>64–80 GB RAM (Mac Studio / server)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-title">Bigger ≠ always better for your use case</div>
+        A 14B model that answers in 1 second is more useful as a coding subagent than a 70B model that takes 10 seconds. Match the model to the task — use small/fast for quick lookups, large/slow for deep reasoning.
+      </div>
+    </section>
+
+
+    <!-- ── 3. Quantization ──────────────────────────── -->
+    <section id="quantization">
+      <h2><span class="icon">🗜️</span> Quantization: 4-bit, 6-bit, 8-bit</h2>
+
+      <p>Even a 14B model at full precision (<strong>16-bit</strong>, also called "float16" or "bf16") would need about <strong>28 GB</strong> of RAM. That doesn't fit on most laptops. Quantization is how we compress it.</p>
+
+      <p>Every parameter in the model is a number. At full precision, each number uses 16 bits of storage. <strong>Quantization</strong> rounds those numbers to fewer bits — 8, 6, 4, or even 3.</p>
+
+      <div class="analogy">
+        <div class="analogy-label">Analogy</div>
+        <p>Think of it like <strong>image compression</strong>. A raw photo (PNG) and a compressed JPEG look almost identical to the eye, but the JPEG is 10× smaller. You lose a tiny bit of quality you can barely notice. Quantizing a model to 4-bit is similar — you're making it dramatically smaller and faster, with a small quality hit that often doesn't matter in practice.</p>
+      </div>
+
+      <h3 id="quant-tradeoffs">The speed vs. quality tradeoff</h3>
+
+      <div class="compare-bar">
+        <div class="bar-label">4-bit speed</div>
+        <div class="bar-track"><div class="bar-fill green" style="width:95%"></div></div>
+        <div class="bar-value">~19 tok/s</div>
+      </div>
+      <div class="compare-bar">
+        <div class="bar-label">4-bit quality</div>
+        <div class="bar-track"><div class="bar-fill yellow" style="width:72%"></div></div>
+        <div class="bar-value">Good</div>
+      </div>
+      <br>
+      <div class="compare-bar">
+        <div class="bar-label">6-bit speed</div>
+        <div class="bar-track"><div class="bar-fill cyan" style="width:80%"></div></div>
+        <div class="bar-value">~16 tok/s</div>
+      </div>
+      <div class="compare-bar">
+        <div class="bar-label">6-bit quality</div>
+        <div class="bar-track"><div class="bar-fill cyan" style="width:85%"></div></div>
+        <div class="bar-value">Very good</div>
+      </div>
+      <br>
+      <div class="compare-bar">
+        <div class="bar-label">8-bit speed</div>
+        <div class="bar-track"><div class="bar-fill yellow" style="width:60%"></div></div>
+        <div class="bar-value">~12 tok/s</div>
+      </div>
+      <div class="compare-bar">
+        <div class="bar-label">8-bit quality</div>
+        <div class="bar-track"><div class="bar-fill green" style="width:93%"></div></div>
+        <div class="bar-value">Excellent</div>
+      </div>
+      <br>
+      <div class="compare-bar">
+        <div class="bar-label">16-bit speed</div>
+        <div class="bar-track"><div class="bar-fill red" style="width:30%"></div></div>
+        <div class="bar-value">~6 tok/s</div>
+      </div>
+      <div class="compare-bar">
+        <div class="bar-label">16-bit quality</div>
+        <div class="bar-track"><div class="bar-fill green" style="width:100%"></div></div>
+        <div class="bar-value">Full precision</div>
+      </div>
+
+      <p style="margin-top:1.5rem">Benchmarks above are for Qwen2.5-Coder-32B on the M5 MacBook Pro with 32 GB RAM.</p>
+
+      <h3 id="quant-cheatsheet">Quick reference</h3>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Format</th>
+              <th>VRAM (32B model)</th>
+              <th>Speed on M5</th>
+              <th>Quality</th>
+              <th>Best for</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>4-bit</code></td>
+              <td>~18 GB</td>
+              <td><span class="badge badge-green">~19 tok/s</span></td>
+              <td><span class="badge badge-yellow">Good</span></td>
+              <td>Everyday subagent tasks</td>
+            </tr>
+            <tr>
+              <td><code>6-bit</code></td>
+              <td>~25 GB</td>
+              <td><span class="badge badge-cyan">~16 tok/s</span></td>
+              <td><span class="badge badge-cyan">Very good</span></td>
+              <td>Quality + fits in 32 GB ← our pick</td>
+            </tr>
+            <tr>
+              <td><code>8-bit</code></td>
+              <td>~36 GB</td>
+              <td><span class="badge badge-yellow">~12 tok/s</span></td>
+              <td><span class="badge badge-green">Excellent</span></td>
+              <td>Doesn't fit on 32 GB Mac</td>
+            </tr>
+            <tr>
+              <td><code>16-bit</code></td>
+              <td>~64 GB</td>
+              <td><span class="badge badge-red">~6 tok/s</span></td>
+              <td><span class="badge badge-purple">Full precision</span></td>
+              <td>Research / high-end hardware only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-title">Rule of thumb</div>
+        For a team running models on 32 GB laptops: <strong>4-bit for speed, 6-bit for quality</strong>. Both fit comfortably. 8-bit and above require more RAM than the machine has.
+      </div>
+    </section>
+
+
+    <!-- ── 4. Dense vs MoE ──────────────────────────── -->
+    <section id="dense-vs-moe">
+      <h2><span class="icon">🏗️</span> Dense models vs. Mixture of Experts (MoE)</h2>
+
+      <p>This is one of the most confusing parts of reading model names, and it matters a lot for performance. Two models can both say "35B parameters" but behave completely differently.</p>
+
+      <h3 id="dense-models">Dense models — all hands on deck</h3>
+
+      <p>In a traditional (dense) model, <strong>every single parameter is used for every single token</strong> you generate. If the model is 14B parameters, all 14 billion of those weights participate in computing the output for every word.</p>
+
+      <div class="diagram">
+        <span class="label">Dense model (14B)</span><br><br>
+        Input token: "def"<br><br>
+        <span class="dim">Layer  1:</span>  [████████████████████████████████]  <span class="hi">14B params active</span><br>
+        <span class="dim">Layer  2:</span>  [████████████████████████████████]  <span class="hi">14B params active</span><br>
+        <span class="dim">Layer  3:</span>  [████████████████████████████████]  <span class="hi">14B params active</span><br>
+        <span class="dim">  ...  </span><br>
+        <span class="dim">Layer 40:</span>  [████████████████████████████████]  <span class="hi">14B params active</span><br><br>
+        Output: next token prediction
+      </div>
+
+      <p>Dense models are predictable: their memory footprint = parameters × bits-per-weight. Their speed scales directly with parameter count. More parameters = slower, but more capable.</p>
+
+      <h3 id="moe-models">Mixture of Experts (MoE) — specialists, not generalists</h3>
+
+      <p>MoE models are architecturally different. Instead of one big network, they contain many smaller <strong>"expert" sub-networks</strong>. A routing layer looks at each incoming token and decides: <em>which experts are relevant here?</em> Only a fraction of the total experts activate for any given token.</p>
+
+      <div class="diagram">
+        <span class="label">MoE model (35B total, 3B active — "A3B")</span><br><br>
+        Input token: "def"<br><br>
+        <span class="dim">Router decides which experts to use...</span><br><br>
+        <span class="dim">Expert  1 (Python):   </span> <span class="hi">[████████]</span>  <span class="hi">active</span><br>
+        <span class="dim">Expert  2 (Math):     </span> <span class="dim">[········]</span>  <span class="dim">skipped</span><br>
+        <span class="dim">Expert  3 (Syntax):   </span> <span class="hi">[████████]</span>  <span class="hi">active</span><br>
+        <span class="dim">Expert  4 (Logic):    </span> <span class="dim">[········]</span>  <span class="dim">skipped</span><br>
+        <span class="dim">Expert  5 (Prose):    </span> <span class="dim">[········]</span>  <span class="dim">skipped</span><br>
+        <span class="dim">Expert  6 (Debug):    </span> <span class="hi">[████████]</span>  <span class="hi">active</span><br>
+        <span class="dim">  ...  (many more experts, most skipped)</span><br><br>
+        <span class="dim">Only ~3B params activated, despite 35B total</span><br><br>
+        Output: next token prediction
+      </div>
+
+      <p>This is why you see labels like <code>35B-<strong>A3B</strong></code>: the model has 35 billion total parameters, but only <strong>activates 3 billion</strong> per token. This makes it dramatically faster than a dense 14B model while having the knowledge capacity of a 35B model.</p>
+
+      <div class="callout info">
+        <div class="callout-title">This is why the Qwen3-35B ran at 48 tok/s</div>
+        A dense 35B model would run at maybe 6 tok/s on this hardware. The MoE version activates only 3B parameters per token — so it runs at the speed of a ~3B model with the quality ceiling of a 35B. That's the magic of MoE architecture.
+      </div>
+
+      <h3 id="moe-tradeoffs">When to use which</h3>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>Dense</th>
+              <th>MoE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Speed</strong></td>
+              <td>Proportional to total params</td>
+              <td>Proportional to <em>active</em> params (much faster)</td>
+            </tr>
+            <tr>
+              <td><strong>Memory</strong></td>
+              <td>Proportional to total params</td>
+              <td>Proportional to <em>total</em> params (must fit all experts)</td>
+            </tr>
+            <tr>
+              <td><strong>Quality</strong></td>
+              <td>Consistent and reliable</td>
+              <td>High ceiling, but routing can miss on unusual inputs</td>
+            </tr>
+            <tr>
+              <td><strong>Thinking mode</strong></td>
+              <td>Usually optional or absent</td>
+              <td>Qwen3 MoE always thinks — strips output, wastes tokens</td>
+            </tr>
+            <tr>
+              <td><strong>Best for</strong></td>
+              <td>Coding subagents, reliable output</td>
+              <td>Complex reasoning when you have RAM to spare</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-title">MoE gotcha on our stack</div>
+        The Qwen3 MoE models (like <code>Qwen3.6-35B-A3B</code>) have thinking mode permanently baked in. They generate hundreds of tokens of internal reasoning before answering. Our oMLX backend strips the <code>&lt;think&gt;</code> XML tags — but leaves the thinking text. We handle this in the MCP server, but it costs tokens and time. <strong>For coding subagent use, we default to the Qwen2.5-Coder dense family instead.</strong>
+      </div>
+    </section>
+
+
+    <!-- ── 5. Memory ────────────────────────────────── -->
+    <section id="memory">
+      <h2><span class="icon">💾</span> Memory requirements</h2>
+
+      <p>You can estimate how much RAM a model needs with a simple formula:</p>
+
+      <div class="diagram">
+        <span class="label">Memory estimate formula</span><br><br>
+        RAM (GB) ≈ (parameters in billions) × (bits per weight) ÷ 8  +  ~2 GB overhead<br><br>
+        <span class="dim">Examples:</span><br>
+        Qwen2.5-Coder-14B at 4-bit:  14 × 4 ÷ 8 = <span class="hi">7 GB</span>  + 2 = <span class="hi">~9 GB</span><br>
+        Qwen2.5-Coder-32B at 4-bit:  32 × 4 ÷ 8 = <span class="hi">16 GB</span> + 2 = <span class="hi">~18 GB</span><br>
+        Qwen2.5-Coder-32B at 6-bit:  32 × 6 ÷ 8 = <span class="hi">24 GB</span> + 2 = <span class="hi">~26 GB</span><br>
+        Qwen2.5-Coder-32B at 8-bit:  32 × 8 ÷ 8 = <span class="hi">32 GB</span> + 2 = <span class="hi">~34 GB</span>  <span class="lo">← won't fit in 32 GB</span><br>
+        Qwen2.5-Coder-72B at 4-bit:  72 × 4 ÷ 8 = <span class="hi">36 GB</span> + 2 = <span class="hi">~38 GB</span>  <span class="lo">← won't fit in 32 GB</span>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-title">Leave headroom for the OS</div>
+        macOS takes 4–6 GB of RAM on its own, plus whatever other apps are open. On a 32 GB machine, keep models under <strong>~26 GB</strong> so the system stays responsive.
+      </div>
+
+      <p>For MoE models, the memory requirement is based on <strong>total</strong> parameters (not active), because all the experts' weights need to be resident in memory even if only a few are active per token.</p>
+    </section>
+
+
+    <!-- ── 6. Speed ─────────────────────────────────── -->
+    <section id="speed">
+      <h2><span class="icon">⚡</span> Speed: what "tok/s" means and why it matters</h2>
+
+      <p><strong>tok/s</strong> means "tokens per second" — how fast the model generates output. A token is roughly 0.75 words, so 20 tok/s ≈ 15 words per second, which feels instant. 5 tok/s ≈ 4 words per second, which starts to feel slow for interactive use.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Speed</th>
+              <th>Feel</th>
+              <th>Good for</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-green">30+ tok/s</span></td>
+              <td>Instant — feels like autocomplete</td>
+              <td>Interactive, short responses</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-cyan">18–30 tok/s</span></td>
+              <td>Fast — comfortable for reading</td>
+              <td>Code generation, our target range</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-yellow">8–17 tok/s</span></td>
+              <td>Moderate — noticeable lag on long output</td>
+              <td>Batch tasks, not interactive</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-red">&lt;8 tok/s</span></td>
+              <td>Slow — 200 tokens takes 25+ seconds</td>
+              <td>Background jobs only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Speed is primarily determined by <strong>memory bandwidth</strong> — how fast the CPU/GPU can read the model weights from RAM. This is why Apple Silicon is exceptional for local inference: unified memory means the GPU and CPU share the same RAM pool with extremely high bandwidth.</p>
+
+      <div class="callout info">
+        <div class="callout-title">Why small models are sometimes faster than you'd expect</div>
+        LLM inference is <em>memory-bandwidth bound</em>, not compute bound. A 7B model at 30 tok/s and a 32B model at 19 tok/s might use the same amount of raw GPU compute — the bottleneck is just reading the weights off the chip fast enough. This is why memory bandwidth specs matter more than TFLOPS for local inference.
+      </div>
+    </section>
+
+
+    <!-- ── 7. Apple Silicon ─────────────────────────── -->
+    <section id="apple-silicon">
+      <h2><span class="icon">🍎</span> Why Apple Silicon is great for this</h2>
+
+      <p>Most machines have separate CPU RAM and GPU VRAM. A GPU with 16 GB VRAM can only load a model that fits in those 16 GB — even if your machine has 64 GB of system RAM, the GPU can't use it.</p>
+
+      <p>Apple Silicon (M1, M2, M3, M4, M5) uses <strong>unified memory architecture (UMA)</strong>: the CPU, GPU, and Neural Engine all share the same physical RAM pool. This means:</p>
+
+      <ul style="margin: 1rem 0 1rem 1.5rem; color: var(--muted);">
+        <li style="margin-bottom:0.4rem">A MacBook Pro with 32 GB RAM can load a model that uses all 32 GB</li>
+        <li style="margin-bottom:0.4rem">The GPU has full bandwidth to that entire pool</li>
+        <li>No expensive PCIe bus transfer between CPU and GPU — it's all on one chip</li>
+      </ul>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Chip</th>
+              <th>Memory Bandwidth</th>
+              <th>32B 4-bit speed</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>M1 Pro</td>
+              <td>200 GB/s</td>
+              <td>~10 tok/s</td>
+              <td>First gen UMA</td>
+            </tr>
+            <tr>
+              <td>M2 Pro</td>
+              <td>200 GB/s</td>
+              <td>~12 tok/s</td>
+              <td>Modest improvement</td>
+            </tr>
+            <tr>
+              <td>M3 Pro</td>
+              <td>150 GB/s</td>
+              <td>~10 tok/s</td>
+              <td>Base M3 actually slower</td>
+            </tr>
+            <tr>
+              <td>M4 Pro</td>
+              <td>273 GB/s</td>
+              <td>~16 tok/s</td>
+              <td>Big jump</td>
+            </tr>
+            <tr>
+              <td><strong>M5 (base)</strong></td>
+              <td><strong>153 GB/s</strong></td>
+              <td><strong>~19 tok/s</strong></td>
+              <td><strong>Our machine</strong></td>
+            </tr>
+            <tr>
+              <td>M5 Pro / Max</td>
+              <td>273–500 GB/s</td>
+              <td>~25–40 tok/s</td>
+              <td>Team hardware future</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The M5 base chip's 153 GB/s is 2× faster than M1, explaining why the same 32B model that ran at ~10 tok/s on M1 runs at ~19 tok/s on your machine.</p>
+    </section>
+
+
+    <!-- ── 8. Our models ────────────────────────────── -->
+    <section id="our-models">
+      <h2><span class="icon">🗂️</span> Models we use</h2>
+
+      <p>We use the <strong>Qwen2.5-Coder</strong> family, built by Alibaba's Qwen team. It's specifically trained on code — not just general text — making it significantly better at our use cases than general-purpose models of the same size.</p>
+
+      <div class="model-grid">
+        <div class="model-card">
+          <div class="model-card-icon">⚡</div>
+          <div class="model-card-name">Qwen2.5-Coder-14B-Instruct-4bit</div>
+          <div class="model-card-title">Speed Tier</div>
+          <div class="model-card-desc">Dense, 14B, 4-bit quantized. Fast enough for interactive use. Good for quick lookups, simple completions, and high-frequency subagent calls.</div>
+          <div class="model-card-stat">
+            <span class="badge badge-green">~28 tok/s</span>
+            <span class="badge badge-yellow">~9 GB</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-icon">🎯</div>
+          <div class="model-card-name">Qwen2.5-Coder-14B-Instruct-8bit</div>
+          <div class="model-card-title">Balanced Tier</div>
+          <div class="model-card-desc">Same architecture, higher-precision weights. Noticeably better code quality than 4-bit, still comfortable speed. A good middle ground.</div>
+          <div class="model-card-stat">
+            <span class="badge badge-cyan">~18 tok/s</span>
+            <span class="badge badge-yellow">~15 GB</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-icon">🧠</div>
+          <div class="model-card-name">Qwen2.5-Coder-32B-Instruct-4bit</div>
+          <div class="model-card-title">Quality Tier</div>
+          <div class="model-card-desc">32B dense model at 4-bit. Substantially better at complex code, architecture reasoning, and multi-step problems. Fits in 32 GB RAM.</div>
+          <div class="model-card-stat">
+            <span class="badge badge-cyan">~19 tok/s</span>
+            <span class="badge badge-orange">~18 GB</span>
+          </div>
+        </div>
+
+        <div class="model-card highlight">
+          <div class="model-card-icon">🏆</div>
+          <div class="model-card-name">Qwen2.5-Coder-32B-Instruct-6bit</div>
+          <div class="model-card-title">Best Quality (current default)</div>
+          <div class="model-card-desc">32B dense model at 6-bit. Higher weight precision than 4-bit means fewer hallucinations and more accurate multi-step code. Still fits on 32 GB.</div>
+          <div class="model-card-stat">
+            <span class="badge badge-cyan">~16 tok/s</span>
+            <span class="badge badge-red">~25 GB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-title">Why not Qwen3 MoE?</div>
+        The Qwen3.6-35B-A3B is genuinely fast (~48 tok/s) and capable — but its thinking mode generates hundreds of tokens of internal monologue we have to strip. It also reports the wrong model name in responses (a bug in our oMLX backend). Until those issues are solved, we stick with the Qwen2.5-Coder series for reliability.
+      </div>
+
+      <h3>Switching models</h3>
+      <p>You can switch models at runtime — no Claude Code restart needed:</p>
+      <ul style="margin: 0.75rem 0 0 1.5rem; color: var(--muted);">
+        <li style="margin-bottom:0.4rem"><strong>Interactive:</strong> Type <code>/switch-model</code> in any Claude Code session — you'll get a numbered menu with descriptions and tok/s estimates</li>
+        <li style="margin-bottom:0.4rem"><strong>Direct:</strong> Call the <code>set_model</code> MCP tool with a name or fragment (e.g. <code>set_model("32b")</code>)</li>
+        <li>The choice persists across restarts via <code>~/.config/mlx-mcp/active_model</code></li>
+      </ul>
+    </section>
+
+
+    <!-- ── 9. Decision guide ────────────────────────── -->
+    <section id="decision-guide">
+      <h2><span class="icon">🧭</span> Decision guide</h2>
+
+      <p>Use this when picking which model to load for a task:</p>
+
+      <div class="cheatsheet">
+        <h3>When to use which model</h3>
+        <ul>
+          <li><strong>Quick autocomplete / single-function edits</strong> → 14B 4-bit (fastest)</li>
+          <li><strong>Everyday coding tasks</strong> → 14B 8-bit (balanced)</li>
+          <li><strong>Complex refactoring, architecture review</strong> → 32B 4-bit or 6-bit</li>
+          <li><strong>Best possible quality, no speed pressure</strong> → 32B 6-bit</li>
+          <li><strong>Multiple models loaded</strong> → oMLX can only load one at a time; switch via <code>/switch-model</code></li>
+          <li><strong>Model isn't responding / connection drops</strong> → it's probably loading a new model; retry in 10–20s</li>
+          <li><strong>Getting garbage output</strong> → run <code>quick_test hello</code> to sanity-check; may need to switch models</li>
+          <li><strong>Weird "Thinking Process:" text in output</strong> → you're on a Qwen3 model; switch to Qwen2.5-Coder</li>
+        </ul>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-title">The speed rule of thumb</div>
+        If a response is going to be under ~200 tokens (a short function, a one-liner explanation), nearly any model feels fast enough. If you need 500+ tokens (a full class, a long explanation), tok/s matters — use a faster model or accept the wait.
+      </div>
+    </section>
+
+
+    <!-- ── 10. Glossary ─────────────────────────────── -->
+    <section id="glossary">
+      <h2><span class="icon">📖</span> Glossary</h2>
+
+      <div class="glossary-grid">
+        <div class="glossary-item">
+          <div class="glossary-term">Parameters / Weights</div>
+          <div class="glossary-def">The billions of numerical values that define a model's behavior. Set during training, frozen when you download the model. More = higher capacity.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Quantization</div>
+          <div class="glossary-def">Compressing a model by storing each weight with fewer bits (4, 6, or 8 instead of 16). Reduces file size and RAM use at a small quality cost.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Dense model</div>
+          <div class="glossary-def">A model where all parameters activate for every token. Predictable, reliable. Speed is proportional to total parameter count.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">MoE (Mixture of Experts)</div>
+          <div class="glossary-def">Architecture with many specialist sub-networks ("experts"). Only a fraction activate per token. Fast (only active params matter for speed) but requires all weights in RAM.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">tok/s (tokens per second)</div>
+          <div class="glossary-def">Generation speed. ~0.75 words per token. 20 tok/s ≈ 15 words/sec, which feels instant. Below 8 tok/s starts to feel slow for interactive use.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Unified Memory (UMA)</div>
+          <div class="glossary-def">Apple Silicon's architecture where CPU and GPU share the same RAM pool. Allows running large models on laptops that would need a dedicated GPU on any other platform.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">oMLX</div>
+          <div class="glossary-def">Our local inference server. Runs on port 8000, exposes an OpenAI-compatible API. Manages model loading/unloading and serves requests from Claude Code via MCP.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">MCP (Model Context Protocol)</div>
+          <div class="glossary-def">Anthropic's protocol for giving Claude Code access to external tools. Our MCP server bridges Claude Code to oMLX, exposing tools like <code>chat</code>, <code>set_model</code>, and <code>quick_test</code>.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Thinking mode</div>
+          <div class="glossary-def">A feature in Qwen3 models where the model generates an internal reasoning chain before answering. Improves quality on hard problems but costs tokens and time. Can't be fully disabled on Qwen3 via oMLX.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Context window</div>
+          <div class="glossary-def">The maximum number of tokens a model can "see" at once (prompt + response combined). Qwen2.5-Coder-32B has a 128K context window — plenty for large code files.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">Instruct model</div>
+          <div class="glossary-def">A model fine-tuned to follow instructions and have conversations. Opposed to a "base" model, which just predicts the next token. We always use Instruct variants.</div>
+        </div>
+        <div class="glossary-item">
+          <div class="glossary-term">mlx-community</div>
+          <div class="glossary-def">A Hugging Face organization that publishes MLX-optimized model files. When you download a model in oMLX, it typically comes from <code>mlx-community/&lt;model-name&gt;</code>.</div>
+        </div>
+      </div>
+    </section>
+
+
+    <div class="doc-footer">
+      <span>mlx-mcp-server · Internal knowledge base draft</span>
+      <span>Last updated June 2026 · Brice Neal, Grafana</span>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Simple scroll spy for sidebar
+  const links = document.querySelectorAll('.sidebar nav a');
+  const sections = [...links].map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.sidebar nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

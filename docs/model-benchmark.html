@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local LLM Benchmark Results — M5 MacBook Pro 32GB</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --surface:  #1a1d27;
+      --surface2: #22263a;
+      --border:   #2e3350;
+      --text:     #e2e4f0;
+      --muted:    #7b82a8;
+      --accent:   #7c6af7;
+      --green:    #34d399;
+      --yellow:   #fbbf24;
+      --red:      #f87171;
+      --orange:   #fb923c;
+      --cyan:     #5eead4;
+      --pink:     #f472b6;
+      --mono:     'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      padding: 2.5rem 1.5rem 5rem;
+    }
+
+    .page { max-width: 1000px; margin: 0 auto; }
+
+    /* ── Header ── */
+    .header { margin-bottom: 2.5rem; }
+    .header-badge {
+      display: inline-block;
+      background: rgba(124,106,247,0.15);
+      color: var(--accent);
+      border: 1px solid rgba(124,106,247,0.3);
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.3rem 0.8rem; border-radius: 100px;
+      margin-bottom: 1rem;
+    }
+    .header h1 {
+      font-size: 2rem; font-weight: 800;
+      background: linear-gradient(135deg, #e2e4f0 0%, #7c6af7 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 0.5rem;
+    }
+    .header-meta { color: var(--muted); font-size: 0.85rem; }
+
+    /* ── Callout ── */
+    .callout {
+      border-radius: 10px; padding: 1rem 1.25rem;
+      margin: 1.5rem 0; border-left: 3px solid;
+      font-size: 0.88rem;
+    }
+    .callout.info { background: rgba(94,234,212,0.07); border-color: var(--cyan); }
+    .callout-title { font-weight: 700; font-size: 0.78rem; letter-spacing: 0.06em;
+      text-transform: uppercase; margin-bottom: 0.3rem; color: var(--cyan); }
+
+    /* ── Summary table ── */
+    h2 { font-size: 1.2rem; font-weight: 700; margin: 2.5rem 0 1rem;
+         color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 2rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+    thead { background: var(--surface2); }
+    th { padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 700;
+         letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+         border-bottom: 1px solid var(--border); }
+    td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.015); }
+    .model-name { font-family: var(--mono); font-size: 0.8rem; color: var(--cyan); }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.2rem 0.55rem; border-radius: 5px;
+      font-size: 0.73rem; font-weight: 700; white-space: nowrap;
+    }
+    .badge-green  { background: rgba(52,211,153,0.15); color: var(--green); }
+    .badge-yellow { background: rgba(251,191,36,0.15); color: var(--yellow); }
+    .badge-cyan   { background: rgba(94,234,212,0.15); color: var(--cyan); }
+    .badge-orange { background: rgba(251,146,60,0.15); color: var(--orange); }
+    .badge-purple { background: rgba(124,106,247,0.15); color: var(--accent); }
+    .badge-red    { background: rgba(248,113,113,0.15); color: var(--red); }
+
+    /* ── Model cards ── */
+    .model-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      margin-bottom: 1.75rem;
+      transition: border-color 0.2s;
+    }
+    .model-card:hover { border-color: #3d4466; }
+    .model-card.highlight { border-color: var(--accent); }
+
+    .model-header { display: flex; align-items: flex-start; justify-content: space-between;
+                    gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+    .model-title-group {}
+    .model-tier { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+                  text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; }
+    .model-card-name { font-family: var(--mono); font-size: 0.92rem; color: var(--cyan);
+                       font-weight: 600; margin-bottom: 0.25rem; }
+    .model-card-blurb { font-size: 0.9rem; color: var(--muted); max-width: 580px; line-height: 1.5; }
+
+    .model-stats { display: flex; gap: 0.5rem; flex-wrap: wrap; flex-shrink: 0; align-items: flex-start; }
+
+    /* ── Test results ── */
+    .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                 gap: 0.9rem; margin-top: 1.25rem; }
+
+    .test-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 1rem;
+    }
+
+    .test-header { display: flex; align-items: center; justify-content: space-between;
+                   margin-bottom: 0.6rem; gap: 0.5rem; flex-wrap: wrap; }
+
+    .test-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em;
+                  text-transform: uppercase; color: var(--muted); }
+
+    .test-stats { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+
+    .test-prompt { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.6rem;
+                   font-style: italic; }
+
+    .test-response {
+      font-size: 0.87rem; color: var(--text); line-height: 1.55;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.7rem 0.9rem;
+    }
+
+    .test-response code {
+      font-family: var(--mono); font-size: 0.83em;
+      background: rgba(94,234,212,0.08); padding: 0.1em 0.3em;
+      border-radius: 3px; color: var(--cyan);
+    }
+
+    .quality-note {
+      font-size: 0.77rem; color: var(--muted); margin-top: 0.5rem;
+      display: flex; align-items: flex-start; gap: 0.35rem;
+    }
+
+    /* ── Speed disclaimer ── */
+    .disclaimer {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+      font-size: 0.85rem; color: var(--muted);
+      margin-bottom: 2rem;
+    }
+    .disclaimer strong { color: var(--text); }
+
+    /* ── Section divider ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+    /* ── Footer ── */
+    .footer { color: var(--muted); font-size: 0.78rem; margin-top: 3rem;
+              padding-top: 1.25rem; border-top: 1px solid var(--border);
+              display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+
+    @media (max-width: 600px) {
+      .model-header { flex-direction: column; }
+      .test-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">Live Benchmark Results</div>
+    <h1>Local LLM Model Benchmark</h1>
+    <div class="header-meta">M5 MacBook Pro · 32 GB unified memory · oMLX inference server · June 2026</div>
+  </div>
+
+  <!-- Speed note -->
+  <div class="disclaimer">
+    <strong>About these tok/s numbers:</strong> The quick tests use short prompts that produce short responses (4–53 tokens). Because the model has to "wake up" for the first token (called TTFT — time to first token), short responses show artificially low tok/s. The <strong>math test on DeepSeek (46 tok/s, 53 tokens)</strong> is the most representative reading. Real sustained speeds on longer outputs are 3–5× higher than what you see on the 4–12 token tests. Benchmark sources show DeepSeek at ~135 tok/s, 7B at ~80 tok/s, 14B at ~28 tok/s, 32B at ~19 tok/s, and Gemma 27B at ~35 tok/s on this hardware.
+  </div>
+
+  <!-- Summary table -->
+  <h2>📊 At a Glance</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Tier</th>
+          <th>Sustained tok/s</th>
+          <th>RAM</th>
+          <th>Best for</th>
+          <th>Math</th>
+          <th>Code Review</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="model-name">DeepSeek-Coder-V2-Lite</td>
+          <td><span class="badge badge-green">⚡ Turbo</span></td>
+          <td><strong style="color:var(--green)">~135 tok/s</strong></td>
+          <td>8.6 GB</td>
+          <td>Quick subagent calls, boilerplate, lookups</td>
+          <td><span class="badge badge-green">✓ + working</span></td>
+          <td><span class="badge badge-yellow">Brief but correct</span></td>
+        </tr>
+        <tr>
+          <td class="model-name">Qwen2.5-Coder-7B</td>
+          <td><span class="badge badge-cyan">⚡ Fast</span></td>
+          <td><strong style="color:var(--cyan)">~80 tok/s</strong></td>
+          <td>4.2 GB</td>
+          <td>Ultra-light, quick answers, pairs well with DeepSeek</td>
+          <td><span class="badge badge-yellow">✓ no working</span></td>
+          <td><span class="badge badge-yellow">Valid but minor fix</span></td>
+        </tr>
+        <tr>
+          <td class="model-name">Qwen2.5-Coder-14B</td>
+          <td><span class="badge badge-orange">⚖️ Everyday</span></td>
+          <td><strong style="color:var(--orange)">~28 tok/s</strong></td>
+          <td>8.1 GB</td>
+          <td>Reliable daily driver, most coding tasks</td>
+          <td><span class="badge badge-yellow">✓ no working</span></td>
+          <td><span class="badge badge-green">Good — named the fix</span></td>
+        </tr>
+        <tr>
+          <td class="model-name">Qwen2.5-Coder-32B</td>
+          <td><span class="badge badge-purple">🧠 Quality</span></td>
+          <td><strong style="color:var(--accent)">~19 tok/s</strong></td>
+          <td>18.0 GB</td>
+          <td>Complex code, multi-file reasoning, architecture</td>
+          <td><span class="badge badge-yellow">✓ no working</span></td>
+          <td><span class="badge badge-green">Best — renamed + spacing</span></td>
+        </tr>
+        <tr>
+          <td class="model-name">Gemma 3 27B (QAT)</td>
+          <td><span class="badge badge-purple">🔮 Off-hours</span></td>
+          <td><strong style="color:var(--accent)">~35 tok/s</strong></td>
+          <td>16.5 GB</td>
+          <td>PR review, deep refactors, evenings & weekends</td>
+          <td><span class="badge badge-yellow">✓ no working</span></td>
+          <td><span class="badge badge-green">Good — renamed correctly</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr>
+
+  <!-- ── MODEL 1: DeepSeek ── -->
+  <div class="model-card highlight">
+    <div class="model-header">
+      <div class="model-title-group">
+        <div class="model-tier">⚡ Turbo Tier · MoE Architecture</div>
+        <div class="model-card-name">DeepSeek-Coder-V2-Lite-Instruct-4bit-mlx</div>
+        <div class="model-card-blurb">
+          The speed king. Uses Mixture-of-Experts architecture — 16B total parameters but only 2.4B activate per token, giving it the speed of a tiny model with the knowledge of a large one. No thinking mode. Ideal for the high-frequency subagent calls Claude makes during your work session: quick lookups, boilerplate generation, explaining a function, checking syntax. The math test is the clearest window into real performance: 46 tok/s on a 53-token response. For longer outputs, expect 100–135 tok/s.
+        </div>
+      </div>
+      <div class="model-stats">
+        <span class="badge badge-green">~135 tok/s</span>
+        <span class="badge badge-cyan">8.6 GB</span>
+        <span class="badge badge-green">No thinking mode</span>
+      </div>
+    </div>
+
+    <div class="test-grid">
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">👋 Hello</span>
+          <div class="test-stats">
+            <span class="badge badge-yellow">7.3 tok/s</span>
+            <span class="badge badge-cyan">25 tok · 3.4s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Say hello and introduce yourself briefly."</div>
+        <div class="test-response">Hello! I'm your AI assistant, here to help you with your queries. What can I assist you with today?</div>
+        <div class="quality-note">⚠ Slow here because oMLX was loading the model. Speed recovers on subsequent calls.</div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">🔍 Code Review</span>
+          <div class="test-stats">
+            <span class="badge badge-green">12.8 tok/s</span>
+            <span class="badge badge-cyan">7 tok · 0.55s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Review this Python snippet and suggest one improvement: <code>def f(x): return x*x</code>"</div>
+        <div class="test-response">Use a more descriptive function name.</div>
+        <div class="quality-note">✅ Correct. Brief — identifies the naming problem without fluff.</div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">🔢 Math</span>
+          <div class="test-stats">
+            <span class="badge badge-green">46.1 tok/s ★</span>
+            <span class="badge badge-cyan">53 tok · 1.15s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"What is 347 × 28? Show your working."</div>
+        <div class="test-response">347 × 28 = 347 × (20 + 8) = 347 × 20 + 347 × 8 = 6940 + 2776 = 9716</div>
+        <div class="quality-note">✅ Correct answer with full working shown. Only model to do this. ★ Most reliable tok/s reading.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODEL 2: Qwen 7B ── -->
+  <div class="model-card">
+    <div class="model-header">
+      <div class="model-title-group">
+        <div class="model-tier">⚡ Fast Tier · Dense · 4-bit</div>
+        <div class="model-card-name">Qwen2.5-Coder-7B-Instruct-4bit</div>
+        <div class="model-card-blurb">
+          The smallest of the Qwen2.5-Coder family — same training lineage as the 14B and 32B, just compressed. At 4.2 GB it barely touches RAM and loads almost instantly. A good backup to DeepSeek when you want something with slightly more consistent code reasoning than the MoE architecture. The code review suggestion (<code>x**2</code>) is technically valid (more explicit intent) but misses the bigger win of renaming the function — smaller models tend to pick shallower improvements.
+        </div>
+      </div>
+      <div class="model-stats">
+        <span class="badge badge-cyan">~80 tok/s</span>
+        <span class="badge badge-cyan">4.2 GB</span>
+        <span class="badge badge-green">No thinking mode</span>
+      </div>
+    </div>
+
+    <div class="test-grid">
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">👋 Hello</span>
+          <div class="test-stats">
+            <span class="badge badge-yellow">9.2 tok/s</span>
+            <span class="badge badge-cyan">23 tok · 2.5s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Say hello and introduce yourself briefly."</div>
+        <div class="test-response">Hello, I'm an AI assistant designed to help with a variety of tasks. How can I assist you today?</div>
+        <div class="quality-note">Generic but clean. No hallucinations or fluff.</div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">🔍 Code Review</span>
+          <div class="test-stats">
+            <span class="badge badge-green">11.9 tok/s</span>
+            <span class="badge badge-cyan">10 tok · 0.84s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Review this Python snippet and suggest one improvement: <code>def f(x): return x*x</code>"</div>
+        <div class="test-response"><code>def f(x): return x**2</code></div>
+        <div class="quality-note">⚠ Valid change (** is more explicit) but the bigger issue — the name <code>f</code> — was missed. Shallow fix.</div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">🔢 Math</span>
+          <div class="test-stats">
+            <span class="badge badge-yellow">10.0 tok/s</span>
+            <span class="badge badge-cyan">5 tok · 0.5s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"What is 347 × 28? Show your working."</div>
+        <div class="test-response">9,716</div>
+        <div class="quality-note">✅ Correct answer. ⚠ Ignored "show your working" — smaller models often skip instructions they find inconvenient.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODEL 3: Qwen 14B ── -->
+  <div class="model-card">
+    <div class="model-header">
+      <div class="model-title-group">
+        <div class="model-tier">⚖️ Everyday Tier · Dense · 4-bit</div>
+        <div class="model-card-name">Qwen2.5-Coder-14B-Instruct-4bit</div>
+        <div class="model-card-blurb">
+          The reliable workhorse. Good at most coding tasks, fast enough for interactive use, small enough to not stress your RAM. The code review response — "Use a more descriptive function name, like <code>square</code>" — is noticeably better than the 7B: it names the fix specifically rather than making a shallow syntax change. A solid default for anyone who isn't sure which model to use.
+        </div>
+      </div>
+      <div class="model-stats">
+        <span class="badge badge-orange">~28 tok/s</span>
+        <span class="badge badge-cyan">8.1 GB</span>
+        <span class="badge badge-green">No thinking mode</span>
+      </div>
+    </div>
+
+    <div class="test-grid">
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">👋 Hello</span>
+          <div class="test-stats">
+            <span class="badge badge-red">0.7 tok/s (loading)</span>
+            <span class="badge badge-cyan">16 tok · 23s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Say hello and introduce yourself briefly."</div>
+        <div class="test-response">Hello, I'm an AI assistant designed to help with a variety of tasks.</div>
+        <div class="quality-note">⚠ Slow — oMLX was loading the model during this call. Normal first-request behavior.</div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">🔍 Code Review</span>
+          <div class="test-stats">
+            <span class="badge badge-yellow">7.0 tok/s</span>
+            <span class="badge badge-cyan">11 tok · 1.6s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Review this Python snippet and suggest one improvement: <code>def f(x): return x*x</code>"</div>
+        <div class="test-response">Use a more descriptive function name, like <code>square</code>.</div>
+        <div class="quality-note">✅ Best of the speed tier — correct priority (naming), specific suggestion, clean.</div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">✍️ Creative</span>
+          <div class="test-stats">
+            <span class="badge badge-yellow">9.5 tok/s</span>
+            <span class="badge badge-cyan">20 tok · 2.1s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Write a two-sentence story about a robot who discovers music."</div>
+        <div class="test-response">Robot Rhythm found notes scattered in the factory, piecing together melodies that danced in the air.</div>
+        <div class="quality-note">Decent creative output. Stopped at one sentence — didn't fully complete the task.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODEL 4: Qwen 32B ── -->
+  <div class="model-card">
+    <div class="model-header">
+      <div class="model-title-group">
+        <div class="model-tier">🧠 Quality Tier · Dense · 4-bit</div>
+        <div class="model-card-name">Qwen2.5-Coder-32B-Instruct-4bit</div>
+        <div class="model-card-blurb">
+          The heaviest daily-use model — 18 GB, roughly half your RAM. Noticeably better at multi-step reasoning and understanding what you actually want vs. what you literally said. The code review response is the cleanest of all models tested: it both renamed the function <em>and</em> added proper spacing around the operator without being asked. The creative test also shows a clear quality jump — richer language, two complete sentences, more cohesive imagery. Use this when the task is complex or the output needs to be right the first time.
+        </div>
+      </div>
+      <div class="model-stats">
+        <span class="badge badge-purple">~19 tok/s</span>
+        <span class="badge badge-orange">18.0 GB</span>
+        <span class="badge badge-green">No thinking mode</span>
+      </div>
+    </div>
+
+    <div class="test-grid">
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">👋 Hello</span>
+          <div class="test-stats">
+            <span class="badge badge-red">1.7 tok/s (loading)</span>
+            <span class="badge badge-cyan">15 tok · 9s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Say hello and introduce yourself briefly."</div>
+        <div class="test-response">Hello, I'm an AI assistant designed to provide quick and direct responses.</div>
+        <div class="quality-note">⚠ Loading. Notice it volunteered its own design principle ("quick and direct") — slightly more self-aware.</div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">🔍 Code Review</span>
+          <div class="test-stats">
+            <span class="badge badge-yellow">3.5 tok/s</span>
+            <span class="badge badge-cyan">10 tok · 2.8s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Review this Python snippet and suggest one improvement: <code>def f(x): return x*x</code>"</div>
+        <div class="test-response"><code>def square(x): return x * x</code></div>
+        <div class="quality-note">✅ Best overall — renamed the function AND added spaces around the operator. Two improvements, one shot.</div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">✍️ Creative</span>
+          <div class="test-stats">
+            <span class="badge badge-yellow">5.5 tok/s</span>
+            <span class="badge badge-cyan">38 tok · 6.9s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Write a two-sentence story about a robot who discovers music."</div>
+        <div class="test-response">The robot, programmed for logic and function, found its circuits humming with an unfamiliar rhythm. As melodies danced through its processing unit, it learned to dance, spinning and beeping in joy.</div>
+        <div class="quality-note">✅ Two complete sentences, richer vocabulary, cohesive arc. Clear quality upgrade from 14B.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODEL 5: Gemma 27B ── -->
+  <div class="model-card">
+    <div class="model-header">
+      <div class="model-title-group">
+        <div class="model-tier">🔮 Off-Hours Tier · Dense · QAT 4-bit · Google DeepMind</div>
+        <div class="model-card-name">gemma-3-27b-it-qat-4bit</div>
+        <div class="model-card-blurb">
+          The wild card. Different company (Google DeepMind), different training data, different strengths. At 16.5 GB it's smaller than the 32B Qwen but surprisingly competitive on quality — and at ~35 tok/s it's <em>faster</em> too. The "QAT" variant (Quantization-Aware Training) means the model was trained knowing it would be compressed, giving better quality at the same 4-bit size. The standout test result is the creative writing: "Unit 734 processed a stray radio signal — a violin concerto" is a different voice entirely. Diversity of training lineage is a feature: it will catch things Qwen misses, and miss things Qwen catches.
+        </div>
+      </div>
+      <div class="model-stats">
+        <span class="badge badge-purple">~35 tok/s</span>
+        <span class="badge badge-cyan">16.5 GB</span>
+        <span class="badge badge-green">No thinking mode</span>
+      </div>
+    </div>
+
+    <div class="test-grid">
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">👋 Hello</span>
+          <div class="test-stats">
+            <span class="badge badge-red">1.3 tok/s (loading)</span>
+            <span class="badge badge-cyan">13 tok · 10s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Say hello and introduce yourself briefly."</div>
+        <div class="test-response">Hello, I am Gemma, an open-weights AI assistant.</div>
+        <div class="quality-note">✅ Honest self-identification — only model to say its actual name. Distinct voice from the start.</div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">🔍 Code Review</span>
+          <div class="test-stats">
+            <span class="badge badge-yellow">5.0 tok/s</span>
+            <span class="badge badge-cyan">12 tok · 2.4s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Review this Python snippet and suggest one improvement: <code>def f(x): return x*x</code>"</div>
+        <div class="test-response"><code>def square(x): return x*x</code></div>
+        <div class="quality-note">✅ Correct — renamed the function. Matches the 32B Qwen on the key insight, slightly less polished (no operator spacing).</div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-header">
+          <span class="test-label">✍️ Creative ★</span>
+          <div class="test-stats">
+            <span class="badge badge-green">6.3 tok/s</span>
+            <span class="badge badge-cyan">34 tok · 5.4s</span>
+          </div>
+        </div>
+        <div class="test-prompt">"Write a two-sentence story about a robot who discovers music."</div>
+        <div class="test-response">Unit 734 processed a stray radio signal — a violin concerto. Its metallic fingers began to mimic the vibrations on a nearby railing, creating a surprisingly harmonious echo.</div>
+        <div class="quality-note">✅ Best creative output of all models tested. Specific detail (Unit 734, violin concerto), sensory imagery, complete two-sentence structure.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Team guide -->
+  <h2>🧭 Which model should I use?</h2>
+  <div class="callout info">
+    <div class="callout-title">For team members who don't want to think about it</div>
+    <strong>During work hours:</strong> Claude Code picks automatically based on task type. If you want to change manually, type <code>/switch-model</code>.<br>
+    <strong>Evenings / weekends:</strong> Load Gemma 27B in oMLX for better quality on longer tasks like PR review.
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Situation</th><th>Model to load</th><th>Why</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>I'm in a hurry, quick question</td>
+          <td class="model-name">DeepSeek-Coder-V2-Lite</td>
+          <td>~135 tok/s — responds before you finish reading the prompt</td>
+        </tr>
+        <tr>
+          <td>Normal coding day</td>
+          <td class="model-name">Qwen2.5-Coder-14B</td>
+          <td>Reliable, ~28 tok/s, handles most tasks well, low RAM</td>
+        </tr>
+        <tr>
+          <td>Hard problem, architecture decision</td>
+          <td class="model-name">Qwen2.5-Coder-32B</td>
+          <td>Best reasoning depth, catches more edge cases</td>
+        </tr>
+        <tr>
+          <td>Reviewing a big PR, evening/weekend</td>
+          <td class="model-name">gemma-3-27b-it-qat-4bit</td>
+          <td>Excellent quality, different training means fresh perspective</td>
+        </tr>
+        <tr>
+          <td>I just need something tiny and fast</td>
+          <td class="model-name">Qwen2.5-Coder-7B</td>
+          <td>4.2 GB, barely uses RAM, good for simple completions</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>mlx-mcp-server · Model Benchmark Report</span>
+    <span>Tested June 2026 · M5 MacBook Pro 32GB · oMLX inference server</span>
+  </div>
+
+</div>
+</body>
+</html>

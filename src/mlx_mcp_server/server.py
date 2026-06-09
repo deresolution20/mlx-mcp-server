@@ -410,6 +410,21 @@ def main() -> None:
         ),
     )
     install_parser.add_argument(
+        "--with-commands",
+        action="store_true",
+        help="Also install slash commands (/switch-model, /big-model, /big-model-done) to ~/.claude/commands/",
+    )
+    install_parser.add_argument(
+        "--with-scripts",
+        action="store_true",
+        help="Also install Big Model Mode shell scripts to ~/bin/",
+    )
+    install_parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Equivalent to --with-commands --with-scripts; installs everything",
+    )
+    install_parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print the config that would be written without modifying any files",
@@ -422,12 +437,16 @@ def main() -> None:
         from .installer import install
         # Prefer env var over CLI flag so the key doesn't appear in shell history or ps output
         api_key = args.api_key or _os.environ.get("MLX_API_KEY", "")
+        with_commands = args.with_commands or args.full
+        with_scripts = args.with_scripts or args.full
         install(
             claude_code=args.claude_code,
             base_url=args.base_url,
             model=args.model,
             api_key=api_key,
             dry_run=args.dry_run,
+            with_commands=with_commands,
+            with_scripts=with_scripts,
         )
     else:
         mcp.run()

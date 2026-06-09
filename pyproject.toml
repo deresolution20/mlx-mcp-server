@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mlx-mcp-server"
-version = "0.1.0"
+version = "0.2.0"
 description = "MCP server bridging Claude to local MLX LM (and any OpenAI-compatible backend)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,6 +23,8 @@ Repository = "https://github.com/deresolution20/mlx-mcp-server"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mlx_mcp_server"]
+# hatchling includes all files under the package tree by default,
+# so commands/ and scripts/ subdirectories are automatically bundled.
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
