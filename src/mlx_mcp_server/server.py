@@ -12,6 +12,32 @@ _client = LLMClient(_config)
 
 mcp = FastMCP("mlx-mcp-server")
 
+import json as _json
+import os as _os
+from datetime import datetime, timezone
+
+_CALL_LOG_PATH = _os.path.expanduser("~/.omlx/mlx-call-log.jsonl")
+
+
+def _append_call_log(model, category, prompt_tokens, completion_tokens):
+    """Append one numeric usage record per offload call. Best-effort; never raises.
+
+    Records counts only — no prompt/response content.
+    """
+    rec = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "model": model or "",
+        "category": category or "other",
+        "prompt_tokens": int(prompt_tokens or 0),
+        "completion_tokens": int(completion_tokens or 0),
+    }
+    try:
+        _os.makedirs(_os.path.dirname(_CALL_LOG_PATH), exist_ok=True)
+        with open(_CALL_LOG_PATH, "a") as fh:
+            fh.write(_json.dumps(rec) + "\n")
+    except OSError:
+        pass
+
 
 def _model_description(model_id: str) -> str:
     """Return a one-liner description based on model name patterns."""
@@ -110,8 +136,13 @@ async def chat(
     max_tokens: int = 1024,
     top_p: float = 1.0,
     top_k: int = 0,
+    category: str = "other",
 ) -> str:
-    """Send a message to the local LLM and return the response with token usage."""
+    """Send a message to the local LLM and return the response with token usage.
+
+    category is a coarse task tag (review/boilerplate/summarize/extract/explain/other)
+    used only for offload-savings metrics; no content is logged.
+    """
     # Clamp parameters to safe ranges to prevent resource exhaustion
     temperature = max(0.0, min(2.0, temperature))
     max_tokens = max(1, min(4096, max_tokens))
@@ -132,6 +163,12 @@ async def chat(
         top_p=top_p,
         top_k=top_k,
         enable_thinking=False,
+    )
+    _append_call_log(
+        model=result.model,
+        category=category,
+        prompt_tokens=result.prompt_tokens,
+        completion_tokens=result.completion_tokens,
     )
     badge = f"🏠 LOCAL · {result.model}" if result.model else "🏠 LOCAL"
     return (
