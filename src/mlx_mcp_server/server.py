@@ -646,7 +646,8 @@ INSTALL SUBCOMMAND
     --api-key KEY        API key for oMLX  (or set MLX_API_KEY env var)
     --with-commands      Install slash commands → ~/.claude/commands/
     --with-scripts       Install Big Model Mode scripts → ~/bin/
-    --full               Install everything (--with-commands + --with-scripts)
+    --with-offload       Install offload-first power-up: hooks + /offload skill
+    --full               Install everything (commands + scripts + offload)
     --dry-run            Preview what would be written without touching files
 
   Examples:
@@ -675,6 +676,11 @@ SLASH COMMANDS  (inside Claude Code, type /<name>)
 MCP TOOLS  (Claude Code calls these automatically via the mlx server)
   chat                Send a prompt to the local LLM
                         chat(message="explain this function", system_prompt="be concise")
+
+  iterate             Offload a task; the local model retries until a gate passes,
+                      escalating to Claude only when local rungs fail
+                        iterate(message="write slugify()", category="boilerplate",
+                                check_command="ruff check $CANDIDATE_FILE")
 
   quick_test          Run a canned test to verify the active model is responding
                         quick_test(test_type="code_review")

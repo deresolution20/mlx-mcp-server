@@ -298,6 +298,37 @@ set_work_hours_guard(enabled=False)  # off (default)
 
 ---
 
+## Offload-first (token thrift)
+
+This server is built to absorb work that would otherwise spend Claude tokens.
+
+**Tier 1 — portable (zero config).** When the server is connected, it advertises
+an offload-first instructions block, so any agent using it is told to route
+eligible work (summarize, boilerplate, single-file review, extract, explain,
+simple refactors) through the `iterate` tool first, tag a `category`, and keep
+multi-file reasoning + judgment on Claude.
+
+**The `iterate` tool.** Runs a local-first escalation ladder: the active local
+model retries (feeding the gate's failure text back in) up to `max_local_rounds`,
+then optionally one attempt on a bigger local model (`big_model`), then escalates
+to Claude. Provide a gate so retries can improve:
+- Structural: `require_json`, `schema_keys`, `contains`, `regex`, `min_len`.
+- Executable: `check_command` — a shell command that reads the candidate at
+  `$CANDIDATE_FILE` and exits 0 to pass (e.g. `pytest`, `ruff`).
+- No gate → single local attempt, returned for you to verify.
+
+Counts only are logged to `~/.omlx/mlx-call-log.jsonl` (model, category, tokens,
+rounds, winning rung) — never prompt/response content.
+
+**Tier 2 — power-up (one command).** Install Claude Code hooks + an `/offload`
+skill that reinforce the policy:
+
+```bash
+mlx-mcp-server install --claude-code --with-offload   # or --full for everything
+```
+
+---
+
 ## Slash commands
 
 Install with `--full` or `--with-commands` to get these in `~/.claude/commands/`:
