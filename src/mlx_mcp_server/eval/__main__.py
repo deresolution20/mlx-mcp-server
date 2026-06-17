@@ -35,7 +35,9 @@ async def _run(*, models, suite_dir, out_path, eval_run_id):
         )
     finally:
         await client.aclose()
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    out_dir = os.path.dirname(out_path)
+    if out_dir:  # bare filename (e.g. --out results.jsonl) has no dir component
+        os.makedirs(out_dir, exist_ok=True)
     write_results(records, out_path)
     return records
 
