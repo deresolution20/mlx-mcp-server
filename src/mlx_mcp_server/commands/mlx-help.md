@@ -15,8 +15,6 @@ CURRENT STATUS
 
 SLASH COMMANDS
   /switch-model      List models and switch interactively
-  /big-model         Free RAM, load 6-bit 32B for max quality
-  /big-model-done    Switch back to 4-bit, reopen all apps
   /mlx-help          Show this reference card
 
 ──────────────────────────────────────────────────────

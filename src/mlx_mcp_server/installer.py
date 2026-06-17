@@ -32,10 +32,6 @@ def _bundled_commands_dir() -> Path:
     return Path(__file__).parent / "commands"
 
 
-def _bundled_scripts_dir() -> Path:
-    return Path(__file__).parent / "scripts"
-
-
 def _bundled_offload_dir() -> Path:
     return Path(__file__).parent / "offload"
 
@@ -123,32 +119,6 @@ def install_commands(*, dest_dir: Path | None = None, dry_run: bool = False) -> 
         print(f"✅ /{src.stem:<20} → {dest / src.name}")
 
 
-def install_scripts(*, dest_dir: Path | None = None, dry_run: bool = False) -> None:
-    """Copy shell scripts to ~/bin/ and make them executable."""
-    src_dir = _bundled_scripts_dir()
-    dest = dest_dir or (Path.home() / "bin")
-
-    if not src_dir.exists():
-        raise RuntimeError(f"Bundled scripts directory not found: {src_dir}")
-
-    files = list(src_dir.glob("*.sh"))
-    if not files:
-        raise RuntimeError(f"No .sh files found in {src_dir}")
-
-    if dry_run:
-        print(f"[dry-run] Would install {len(files)} script(s) → {dest}/")
-        for f in sorted(files):
-            print(f"   {f.name}")
-        return
-
-    dest.mkdir(parents=True, exist_ok=True)
-    for src in sorted(files):
-        out = dest / src.name
-        _atomic_write(out, src.read_text())
-        out.chmod(out.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        print(f"✅ {src.name:<30} → {out}")
-
-
 def install(
     *,
     claude_code: bool,
@@ -157,7 +127,6 @@ def install(
     api_key: str,
     dry_run: bool,
     with_commands: bool = False,
-    with_scripts: bool = False,
     with_offload: bool = False,
 ) -> None:
     """Full install entry point. Orchestrates MCP config + optional extras."""
@@ -170,12 +139,10 @@ def install(
     )
     if with_commands:
         install_commands(dry_run=dry_run)
-    if with_scripts:
-        install_scripts(dry_run=dry_run)
     if with_offload:
         install_offload_layer(dry_run=dry_run)
 
-    if not dry_run and (with_commands or with_scripts or with_offload):
+    if not dry_run and (with_commands or with_offload):
         print()
         print("All done. Restart Claude Code, then type /offload to verify the skill.")
 

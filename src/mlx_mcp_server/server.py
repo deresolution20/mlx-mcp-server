@@ -383,13 +383,13 @@ async def set_model(model_name: str, force: bool = False) -> str:
     Pass an empty string to clear the override and fall back to auto-detection.
 
     Large models (>22 GB estimated RAM) are blocked during work hours (Mon–Fri
-    8am–5pm Mountain Time) to prevent swap thrashing. Use force=True to bypass —
-    e.g. after running /big-model to close other apps first.
+    8am–5pm Mountain Time) to prevent swap thrashing. Use force=True to bypass
+    (e.g. after closing other apps).
 
     Examples:
       set_model("coder-14b")           # matches Qwen2.5-Coder-14B-Instruct-4bit
-      set_model("6bit")                # matches Qwen2.5-Coder-32B-Instruct-6bit
-      set_model("6bit", force=True)    # bypass work-hours guard (use after /big-model)
+      set_model("30b-a3b")             # matches Qwen3-Coder-30B-A3B-Instruct-MLX-4bit
+      set_model("7b")                  # matches Qwen2.5-Coder-7B-Instruct-4bit
       set_model("")                    # clear override, fall back to auto-detect
     """
     if not model_name:
@@ -439,7 +439,7 @@ async def set_model(model_name: str, force: bool = False) -> str:
             f"   {resolved} needs ~{ram_gb:.0f} GB RAM.\n"
             f"   Loading during work hours risks a 507 or ~1–2 tok/s swap speed.\n\n"
             f"   Options:\n"
-            f"   • /big-model                      close other apps first, then load cleanly\n"
+            f"   • Close other apps first, then load cleanly\n"
             f"   • After 5pm MT / weekends          swap is acceptable for async use\n"
             f"   • set_model(\"{model_name}\", force=True)   load anyway, you've been warned"
         )
@@ -468,7 +468,7 @@ def set_work_hours_guard(enabled: bool) -> str:
     The setting persists across restarts in ~/.config/mlx-mcp/work_hours_guard.
 
     Examples:
-      set_work_hours_guard(True)   # protect work hours — use /big-model or wait until 5pm
+      set_work_hours_guard(True)   # protect work hours — close other apps or wait until 5pm
       set_work_hours_guard(False)  # load any model any time (default)
     """
     write_work_hours_guard(enabled)
@@ -476,7 +476,7 @@ def set_work_hours_guard(enabled: bool) -> str:
         return (
             "✅ Work-hours guard enabled.\n"
             "   Large models (>22 GB) are blocked Mon–Fri 8am–5pm Mountain Time.\n"
-            "   Use /big-model to close other apps and load them cleanly,\n"
+            "   Use force=True to load it anyway after closing other apps,\n"
             "   or load freely after 5pm / on weekends."
         )
     return (
@@ -609,12 +609,7 @@ def main() -> None:
     install_parser.add_argument(
         "--with-commands",
         action="store_true",
-        help="Also install slash commands (/switch-model, /big-model, /big-model-done) to ~/.claude/commands/",
-    )
-    install_parser.add_argument(
-        "--with-scripts",
-        action="store_true",
-        help="Also install Big Model Mode shell scripts to ~/bin/",
+        help="Also install slash commands (/switch-model) to ~/.claude/commands/",
     )
     install_parser.add_argument(
         "--with-offload",
@@ -624,7 +619,7 @@ def main() -> None:
     install_parser.add_argument(
         "--full",
         action="store_true",
-        help="Equivalent to --with-commands --with-scripts --with-offload; installs everything",
+        help="Equivalent to --with-commands --with-offload; installs everything",
     )
     install_parser.add_argument(
         "--dry-run",
@@ -642,7 +637,6 @@ def main() -> None:
         # Prefer env var over CLI flag so the key doesn't appear in shell history or ps output
         api_key = args.api_key or _os.environ.get("MLX_API_KEY", "")
         with_commands = args.with_commands or args.full
-        with_scripts = args.with_scripts or args.full
         with_offload = args.with_offload or args.full
         install(
             claude_code=args.claude_code,
@@ -651,7 +645,6 @@ def main() -> None:
             api_key=api_key,
             dry_run=args.dry_run,
             with_commands=with_commands,
-            with_scripts=with_scripts,
             with_offload=with_offload,
         )
     elif args.command == "help":
@@ -666,7 +659,7 @@ mlx-mcp-server — local LLM bridge for Claude Code
 ===================================================
 
 INSTALL SUBCOMMAND
-  Wire up the MCP server, slash commands, and shell scripts in one step.
+  Wire up the MCP server and slash commands in one step.
 
   Quick start (recommended):
     mlx-mcp-server install --claude-code --full
@@ -678,9 +671,8 @@ INSTALL SUBCOMMAND
     --model NAME         Pin a default model  (auto-detected if omitted)
     --api-key KEY        API key for oMLX  (or set MLX_API_KEY env var)
     --with-commands      Install slash commands → ~/.claude/commands/
-    --with-scripts       Install Big Model Mode scripts → ~/bin/
     --with-offload       Install offload-first power-up: hooks + /offload skill
-    --full               Install everything (commands + scripts + offload)
+    --full               Install everything (commands + offload)
     --dry-run            Preview what would be written without touching files
 
   Examples:
@@ -700,8 +692,6 @@ INSTALL SUBCOMMAND
 
 SLASH COMMANDS  (inside Claude Code, type /<name>)
   /switch-model      List all available models and switch to one interactively
-  /big-model         Close RAM-heavy apps, load the 6-bit 32B model for max quality
-  /big-model-done    Switch back to the fast 4-bit model and reopen all apps
   /mlx-help          Show this reference inside Claude Code
 
 ──────────────────────────────────────────────────────────────
@@ -724,7 +714,7 @@ MCP TOOLS  (Claude Code calls these automatically via the mlx server)
 
   set_model           Switch the active model by name or fragment
                         set_model(model_name="14b")
-                        set_model(model_name="Qwen2.5-Coder-32B-Instruct-6bit", force=True)
+                        set_model(model_name="30b-a3b")
 
   health_check        Confirm oMLX is reachable and responding
                         health_check()

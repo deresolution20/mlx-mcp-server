@@ -258,7 +258,6 @@ async def test_set_model_blocks_big_model_during_work_hours():
     with patch("mlx_mcp_server.server._is_work_hours", return_value=True):
         result = await set_model("6bit")
     assert "⏰" in result
-    assert "/big-model" in result
     assert "force=True" in result
 
 
@@ -309,7 +308,7 @@ async def test_set_model_small_model_not_blocked_during_work_hours():
 def test_set_work_hours_guard_enable():
     result = set_work_hours_guard(True)
     assert "enabled" in result.lower()
-    assert "/big-model" in result
+    assert "force=True" in result
 
 def test_set_work_hours_guard_disable():
     result = set_work_hours_guard(False)
@@ -350,12 +349,9 @@ def test_help_output_covers_all_sections(capsys):
     assert "--full" in out
     assert "--dry-run" in out
     assert "--with-commands" in out
-    assert "--with-scripts" in out
 
     # Slash commands
     assert "/switch-model" in out
-    assert "/big-model" in out
-    assert "/big-model-done" in out
     assert "/mlx-help" in out
 
     # MCP tools
