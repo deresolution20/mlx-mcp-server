@@ -111,6 +111,28 @@ class LLMClient:
 
         return text.strip()
 
+    @staticmethod
+    def _strip_code_fences(text: str) -> str:
+        """If the whole response is a single ```-fenced block, return just its
+        contents. Local models often wrap a code-only answer in a markdown fence,
+        which then fails executable gates (py_compile, etc.). Prose that merely
+        contains a code block is left untouched.
+        """
+        s = text.strip()
+        if not (s.startswith("```") and s.endswith("```")):
+            return text
+        if s.count("```") != 2:
+            return text  # more than one fence pair → mixed content, leave it
+        inner = s[3:-3]  # drop the opening ``` and closing ```
+        newline = inner.find("\n")
+        if newline == -1:
+            return text  # single-line ``` … ``` → leave as-is
+        first, rest = inner[:newline], inner[newline + 1:]
+        # drop an optional language tag on the first line (e.g. ```python)
+        if first.strip() and " " not in first.strip():
+            inner = rest
+        return inner.strip()
+
     async def chat(
         self,
         message: str,
@@ -154,6 +176,7 @@ class LLMClient:
         content = data["choices"][0]["message"]["content"]
         if not enable_thinking:
             content = self._strip_thinking(content)
+        content = self._strip_code_fences(content)
         return ChatResponse(
             content=content,
             prompt_tokens=usage.get("prompt_tokens", 0),

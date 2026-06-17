@@ -218,6 +218,31 @@ def test_strip_thinking_handles_empty_string():
     assert LLMClient._strip_thinking("") == ""
 
 
+def test_strip_code_fences_unwraps_whole_block():
+    """A response that is ONLY a ```lang fenced block returns just the code."""
+    raw = "```python\nimport os\nprint(os.getcwd())\n```"
+    assert LLMClient._strip_code_fences(raw) == "import os\nprint(os.getcwd())"
+
+
+def test_strip_code_fences_bare_fence():
+    raw = "```\nx = 1\n```"
+    assert LLMClient._strip_code_fences(raw) == "x = 1"
+
+
+def test_strip_code_fences_leaves_prose_with_code():
+    """Prose that merely contains a code block is left untouched."""
+    raw = "Here is code:\n```python\nx = 1\n```\nUse it well."
+    assert LLMClient._strip_code_fences(raw) == raw
+
+
+def test_strip_code_fences_passthrough_plain():
+    assert LLMClient._strip_code_fences("just text, no fences") == "just text, no fences"
+
+
+def test_strip_code_fences_handles_empty_string():
+    assert LLMClient._strip_code_fences("") == ""
+
+
 @respx.mock
 async def test_health_check_ok_via_health_endpoint(client):
     # /health works without auth (oMLX-style)
