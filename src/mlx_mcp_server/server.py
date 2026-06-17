@@ -5,6 +5,8 @@ from mcp.server.fastmcp import FastMCP
 
 from .client import LLMClient
 from .config import load_config
+from .gates import structural_gate, executable_gate
+from .iterate import run_iterate
 from .runtime_config import read_work_hours_guard, write_work_hours_guard
 
 _config = load_config()
@@ -180,6 +182,109 @@ async def chat(
         f"---\n"
         f"Tokens: {result.prompt_tokens} prompt + {result.completion_tokens} completion"
         f" = {result.total_tokens} total | {result.elapsed_seconds:.2f}s"
+    )
+
+
+@mcp.tool()
+async def iterate(
+    message: str,
+    category: str = "other",
+    system_prompt: str = "",
+    require_json: bool = False,
+    schema_keys: list[str] | None = None,
+    contains: str = "",
+    regex: str = "",
+    min_len: int = 0,
+    check_command: str = "",
+    max_local_rounds: int = 3,
+    big_model: str = "",
+    temperature: float = 0.7,
+    max_tokens: int = 1024,
+) -> str:
+    """Offload a task to the local model and let it iterate until a gate passes.
+
+    Spends free rungs first: active local model retries (feeding the gate's
+    failure text back in) up to max_local_rounds, then optionally one attempt on
+    a bigger local model (big_model), then escalates to Claude. Provide a gate so
+    retries can improve — structural (require_json / schema_keys / contains /
+    regex / min_len) and/or executable (check_command, a shell command that sees
+    the candidate at $CANDIDATE_FILE and exits 0 to pass). With no gate it runs a
+    single local attempt and asks Claude to verify. category is a coarse task tag
+    for offload-savings metrics; no content is logged.
+    """
+    temperature = max(0.0, min(2.0, temperature))
+    max_tokens = max(1, min(4096, max_tokens))
+    max_local_rounds = max(1, min(5, max_local_rounds))
+
+    _NO_THINK = (
+        "You are a direct, concise assistant. "
+        "Output ONLY your final answer. "
+        "Never use phrases like 'Here\\'s a thinking process', 'Let me analyze', or numbered planning steps. "
+        "Never explain your reasoning — just answer."
+    )
+
+    has_structural = bool(require_json or schema_keys or contains or regex or min_len)
+    if check_command:
+        def gate_fn(text):
+            return executable_gate(text, check_command)
+    elif has_structural:
+        def gate_fn(text):
+            return structural_gate(
+                text,
+                require_json=require_json,
+                schema_keys=schema_keys,
+                contains=(contains or None),
+                regex=(regex or None),
+                min_len=min_len,
+            )
+    else:
+        gate_fn = None
+
+    async def chat_fn(message, system_prompt=""):
+        return await _client.chat(
+            message=message,
+            system_prompt=system_prompt or _NO_THINK,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            enable_thinking=False,
+        )
+
+    result = await run_iterate(
+        chat_fn=chat_fn,
+        message=message,
+        system_prompt=system_prompt,
+        gate_fn=gate_fn,
+        max_local_rounds=max_local_rounds,
+        big_model=big_model,
+        set_model_fn=_client.set_model,
+        get_model_fn=lambda: _client._runtime_model,
+    )
+
+    _append_call_log(
+        model=result.model,
+        category=category,
+        prompt_tokens=result.prompt_tokens,
+        completion_tokens=result.completion_tokens,
+        rounds=result.rounds,
+        winning_rung=result.winning_rung,
+    )
+
+    badge = f"🏠 LOCAL · {result.model}" if result.model else "🏠 LOCAL"
+    if result.escalate:
+        status = (
+            "⚠️  ESCALATE TO CLAUDE — local rungs exhausted. "
+            "Finish it yourself, re-delegate with sharper criteria, or try a bigger model.\n"
+            f"Last gate failures:\n- " + "\n- ".join(result.history[-3:])
+        )
+    elif result.passed is None:
+        status = "🔎 VERIFY ON CLAUDE — no gate was set, so check this before using it."
+    else:
+        status = f"✅ Gate passed on rung '{result.winning_rung}'."
+
+    return (
+        f"{badge}  ·  {result.rounds} round(s)\n\n"
+        f"{result.content}\n\n"
+        f"---\n{status}"
     )
 
 
