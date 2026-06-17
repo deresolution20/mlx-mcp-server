@@ -158,6 +158,7 @@ def install(
     dry_run: bool,
     with_commands: bool = False,
     with_scripts: bool = False,
+    with_offload: bool = False,
 ) -> None:
     """Full install entry point. Orchestrates MCP config + optional extras."""
     install_mcp_config(
@@ -171,10 +172,12 @@ def install(
         install_commands(dry_run=dry_run)
     if with_scripts:
         install_scripts(dry_run=dry_run)
+    if with_offload:
+        install_offload_layer(dry_run=dry_run)
 
-    if not dry_run and (with_commands or with_scripts):
+    if not dry_run and (with_commands or with_scripts or with_offload):
         print()
-        print("All done. Type /switch-model in Claude Code to verify.")
+        print("All done. Restart Claude Code, then type /offload to verify the skill.")
 
 
 def _hook_command_entry(command: str) -> dict:

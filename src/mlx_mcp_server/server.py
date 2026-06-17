@@ -584,9 +584,14 @@ def main() -> None:
         help="Also install Big Model Mode shell scripts to ~/bin/",
     )
     install_parser.add_argument(
+        "--with-offload",
+        action="store_true",
+        help="Also install the offload-first power-up: Claude Code hooks + /offload skill",
+    )
+    install_parser.add_argument(
         "--full",
         action="store_true",
-        help="Equivalent to --with-commands --with-scripts; installs everything",
+        help="Equivalent to --with-commands --with-scripts --with-offload; installs everything",
     )
     install_parser.add_argument(
         "--dry-run",
@@ -605,6 +610,7 @@ def main() -> None:
         api_key = args.api_key or _os.environ.get("MLX_API_KEY", "")
         with_commands = args.with_commands or args.full
         with_scripts = args.with_scripts or args.full
+        with_offload = args.with_offload or args.full
         install(
             claude_code=args.claude_code,
             base_url=args.base_url,
@@ -613,6 +619,7 @@ def main() -> None:
             dry_run=args.dry_run,
             with_commands=with_commands,
             with_scripts=with_scripts,
+            with_offload=with_offload,
         )
     elif args.command == "help":
         _print_help()

@@ -79,3 +79,36 @@ def test_bundled_offload_dir_exists():
     d = _bundled_offload_dir()
     assert (d / "hooks" / "offload-reminder.sh").exists()
     assert (d / "skills" / "offload" / "SKILL.md").exists()
+
+
+from mlx_mcp_server.installer import install
+
+
+def test_install_with_offload_calls_layer(tmp_path, monkeypatch):
+    config_file = tmp_path / "settings.json"
+    monkeypatch.setattr("mlx_mcp_server.installer._claude_code_config_path", lambda: config_file)
+    called = []
+    monkeypatch.setattr(
+        "mlx_mcp_server.installer.install_offload_layer",
+        lambda **kw: called.append(kw),
+    )
+    install(
+        claude_code=True, base_url="http://localhost:8080", model="", api_key="",
+        dry_run=False, with_offload=True,
+    )
+    assert len(called) == 1
+
+
+def test_install_without_offload_skips_layer(tmp_path, monkeypatch):
+    config_file = tmp_path / "settings.json"
+    monkeypatch.setattr("mlx_mcp_server.installer._claude_code_config_path", lambda: config_file)
+    called = []
+    monkeypatch.setattr(
+        "mlx_mcp_server.installer.install_offload_layer",
+        lambda **kw: called.append(kw),
+    )
+    install(
+        claude_code=True, base_url="http://localhost:8080", model="", api_key="",
+        dry_run=False, with_offload=False,
+    )
+    assert called == []
