@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Literal
 
 from mcp.server.fastmcp import FastMCP
@@ -26,9 +27,10 @@ subagent, route it through the `iterate` tool first:
   `iterate` runs once and asks you to verify.
 - Always pass a coarse `category` (review / boilerplate / summarize / extract /
   explain / other). Counts only are logged — never content.
-- Exhaust free rungs before paid ones: `iterate` retries locally, and you can
-  pass `big_model` to add one attempt on a bigger LOCAL model before it
-  escalates to Claude — both are free, so prefer them over taking over yourself.
+- Exhaust free rungs before paid ones: `iterate` retries locally, then
+  automatically tries a bigger loaded LOCAL model before escalating to Claude
+  (override the pick with `big_model`) — both are free, so prefer them over
+  taking over yourself.
 - Keep on Claude: multi-file reasoning, architecture and judgment calls,
   tool-using work, and the live interactive reply. When `iterate` returns
   ESCALATE, take over.
@@ -125,6 +127,23 @@ def _estimated_ram_gb(model_id: str) -> float:
     elif "3bit" in m:
         bits = 3
     return (params * bits / 8) + 2  # +2 GB overhead
+
+
+def _param_size(model_id):
+    """Parameter count in billions parsed from a model name. Ignores quantization
+    tags (4bit/8bit) and MoE active-param suffixes; returns the largest NNb number
+    found, else 0.0. (Drafted locally via the iterate tool, behavioral-gated.)"""
+    name = re.sub(r"\d+\s*bit", "", model_id.lower())
+    matches = re.findall(r"(\d+(?:\.\d+)?)\s*b", name)
+    return max((float(m) for m in matches), default=0.0)
+
+
+def _next_larger_model(current, available):
+    """Smallest model in `available` strictly larger than `current` by param size;
+    '' if none qualifies (e.g. current is already the largest loaded model)."""
+    current_size = _param_size(current)
+    candidates = [m for m in available if _param_size(m) > current_size]
+    return min(candidates, key=_param_size) if candidates else ""
 
 
 def _is_work_hours(_now=None) -> bool:
@@ -226,8 +245,9 @@ async def iterate(
     """Offload a task to the local model and let it iterate until a gate passes.
 
     Spends free rungs first: active local model retries (feeding the gate's
-    failure text back in) up to max_local_rounds, then optionally one attempt on
-    a bigger local model (big_model), then escalates to Claude. Provide a gate so
+    failure text back in) up to max_local_rounds, then one attempt on a bigger
+    local model (auto-selected from the loaded models; override with big_model),
+    then escalates to Claude. Provide a gate so
     retries can improve — structural (require_json / schema_keys / contains /
     regex / min_len) and/or executable (check_command, a shell command that sees
     the candidate at $CANDIDATE_FILE and exits 0 to pass). With no gate it runs a
@@ -270,6 +290,16 @@ async def iterate(
             max_tokens=max_tokens,
             enable_thinking=False,
         )
+
+    # Auto-resolve the free middle rung: with a gate and no explicit big_model,
+    # try the next-larger loaded local model before escalating to Claude.
+    if gate_fn is not None and not big_model:
+        try:
+            models = await _client.list_models()
+            current = await _client._get_model()
+            big_model = _next_larger_model(current, [m.id for m in models])
+        except Exception:
+            big_model = ""
 
     result = await run_iterate(
         chat_fn=chat_fn,
