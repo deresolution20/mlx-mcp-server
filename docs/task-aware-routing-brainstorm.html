@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task-Aware Model Routing — Brainstorm & Sparring</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --ink:#e6edf3; --dim:#9aa7b4;
+    --line:#2d3543; --accent:#58a6ff; --good:#3fb950; --warn:#d29922; --bad:#f85149;
+    --purple:#bc8cff; --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
+  .wrap{max-width:920px;margin:0 auto;padding:48px 24px 96px}
+  header h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
+  header .sub{color:var(--dim);font-size:15px;margin-bottom:8px}
+  .pill{display:inline-block;font:600 11px/1 var(--mono);text-transform:uppercase;
+    letter-spacing:.08em;padding:5px 9px;border-radius:999px;border:1px solid var(--line);
+    color:var(--dim);margin-right:6px}
+  .pill.hot{color:var(--accent);border-color:#1f476f;background:#0d2438}
+  h2{font-size:22px;margin:44px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line);letter-spacing:-.01em}
+  h3{font-size:17px;margin:24px 0 8px}
+  p{margin:10px 0}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .lead{font-size:18px;color:#cdd9e5}
+  code{font:13px/1.5 var(--mono);background:var(--panel2);padding:1px 6px;border-radius:5px;color:#cdd9e5}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:16px 0}
+  .card.rec{border-color:#1f5c2e;background:#0e1b12}
+  .grid{display:grid;gap:14px}
+  @media(min-width:680px){.grid.two{grid-template-columns:1fr 1fr}}
+  .tag{font:600 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;
+    padding:3px 7px;border-radius:5px;display:inline-block}
+  .t-easy{color:var(--good);background:#0e2417}
+  .t-mid{color:var(--warn);background:#241d0e}
+  .t-hard{color:var(--bad);background:#2a1414}
+  .t-rec{color:var(--good);background:#0e2417}
+  ul{margin:8px 0;padding-left:22px}
+  li{margin:4px 0}
+  .pro::before{content:"▲ ";color:var(--good)}
+  .con::before{content:"▼ ";color:var(--bad)}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  td code{font-size:12px}
+  .spar{border-left:3px solid var(--line);padding:2px 0 2px 18px;margin:14px 0}
+  .spar .who{font:600 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--dim)}
+  .spar.b .who{color:var(--accent)}
+  .spar.r .who{color:var(--purple)}
+  .spar p{margin:4px 0 0}
+  .callout{background:#0d2438;border:1px solid #1f476f;border-radius:10px;padding:16px 18px;margin:18px 0}
+  .callout .h{font-weight:700;color:var(--accent);margin-bottom:4px}
+  .ladder{font:13px/1.7 var(--mono);background:var(--panel2);border-radius:10px;padding:16px 18px;color:#cdd9e5;overflow:auto}
+  .num{display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#04111f;
+    font:700 13px/24px var(--mono);text-align:center;margin-right:8px}
+  .q{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--purple);
+    border-radius:8px;padding:12px 16px;margin:10px 0}
+  .q b{color:var(--purple)}
+  footer{margin-top:60px;color:var(--dim);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
+  .src{font-size:13px}
+  .src li{margin:3px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="pill hot">Brainstorm</span><span class="pill">Refinement #2</span><span class="pill">No code yet</span>
+  <h1>Task-Aware Model Routing</h1>
+  <div class="sub">Pre-route the <code>iterate</code> ladder by task — without paying a model-swap tax. · 2026-06-17</div>
+  <p class="lead">Right now <code>iterate</code> always starts on whatever model is loaded, burns up to 3 rounds, then climbs. A one-line docstring and a gnarly refactor get the same opening move. This is about choosing the <em>starting rung</em> from the task — and the wrinkle that makes our case different from every routing paper out there.</p>
+</header>
+
+<h2>The one thing the literature gets wrong for us</h2>
+<p>I read the current routing work — RouteLLM, the cascade surveys, the cost/quality routers. The dominant pattern is a <strong>cascade</strong>: start on the cheapest model, check quality, escalate only on failure. Teams report 30–85% savings doing exactly this. Our <code>iterate</code> ladder already <em>is</em> a cascade. Good — we're on the right track.</p>
+
+<div class="callout">
+  <div class="h">But every one of those systems assumes free model switching.</div>
+  <p style="margin:0">In the cloud, GPT-4 and Mixtral are both resident on someone else's hardware. Routing is pure prediction — picking which always-warm endpoint to hit costs nothing. <strong>On your Mac, only one big model fits under ~24.5 GB at a time.</strong> Switching from the 14B to the 30B means <em>unload + cold-load 17 GB</em> — seconds of wall-clock, every time. So our routing problem isn't "which model is best." It's "which model is best <em>net of the swap tax</em>." That reframes everything below.</p>
+</div>
+
+<h2>What the swap tax actually changes</h2>
+<table>
+  <tr><th></th><th>Cloud router (the papers)</th><th>Our local box</th></tr>
+  <tr><td>Cost unit</td><td>$ per token</td><td><strong>Wall-clock seconds</strong> (tokens are free)</td></tr>
+  <tr><td>Switching models</td><td>≈ 0 (all resident)</td><td><strong>Seconds of cold load</strong> (one big model at a time)</td></tr>
+  <tr><td>Main waste to kill</td><td>Frontier $ spent on easy queries</td><td>Doomed rounds <em>+</em> unnecessary swaps</td></tr>
+  <tr><td>Best move</td><td>Predict hard→big up front</td><td>Predict <em>and</em> minimize thrash; prefer the resident model when it's good enough</td></tr>
+</table>
+<p>So a naive "task-aware" router copied from a blog post could make us <em>slower</em>: classify → decide "hard" → swap to 30B for a task the resident 14B would've nailed in one round. The design has to treat a swap as a first-class cost, not a free lunch.</p>
+
+<h2>Me, sparring with me</h2>
+
+<div class="spar r"><div class="who">Skeptic</div><p>Why build routing at all? The cascade self-corrects. If the small model fails the gate, we climb. The worst case is a few wasted rounds.</p></div>
+<div class="spar b"><div class="who">Builder</div><p>Because "a few wasted rounds" is the whole latency budget. A hard task on the 14B fails the gate 3× (slow tokens, no chance), <em>then</em> we swap and run the 30B. We paid for 3 doomed rounds before doing the thing that was always going to work. And the other tail: a trivial boilerplate stub starts on the 14B default when the 135-tok/s tiny model would've one-shot it. Task-awareness trims both tails.</p></div>
+<div class="spar r"><div class="who">Skeptic</div><p>Fine, but a pre-classifier that's <em>wrong</em> is worse than the cascade. Misjudge "hard," swap to the 30B, and you've eaten a 17 GB cold load for a task the 7B could do. At least the cascade only climbs when it has proof (a real gate failure).</p></div>
+<div class="spar b"><div class="who">Builder</div><p>That's the real risk, and it's the argument <em>against</em> an aggressive up-front classifier. The cascade's strength is that it escalates on <em>evidence</em>, not a guess. So the design shouldn't replace the cascade — it should pick a smarter <em>entry point</em> and keep the cascade as the correctness net underneath. Get the floor wrong, the gate still catches it.</p></div>
+<div class="spar r"><div class="who">Skeptic</div><p>Then where does the routing signal even come from? You're not training a RouteLLM classifier on a single-user box with no labeled data.</p></div>
+<div class="spar b"><div class="who">Builder</div><p>Right — that's overkill and we have no training set. But we already pass a <code>category</code> on every call (<code>boilerplate / summarize / extract / review / explain / other</code>) <em>and</em> we know the gate type. Boilerplate with a <code>min_len</code> gate is easy; "other" with an executable <code>check_command</code> that must compile is hard. That's a free, structured signal we're currently throwing away. Start there.</p></div>
+<div class="spar r"><div class="who">Skeptic</div><p>Category is agent-supplied. I'll be lazy and tag everything <code>other</code>. Your table collapses to "always start mid."</p></div>
+<div class="spar b"><div class="who">Builder</div><p>Fair hit. Two answers. One: <code>other</code> should map to the <em>current</em> behavior (start on resident), so laziness degrades to today, never worse. Two — and this is the honest move — <strong>we already log <code>winning_rung</code> per category in the call log.</strong> Before we hard-code a routing table, we <em>measure</em>: for each category, what rung actually won? If <code>boilerplate</code> already passes on rung 1 every time, routing it down is safe and proven. If <code>other</code> is noise, we learn the signal is weak and don't over-invest. Instrument first, route second.</p></div>
+<div class="spar b"><div class="who">Builder</div><p>And the swap tax gives us a cheap dominant heuristic regardless of category: <strong>if the routed tier equals the resident model, never swap.</strong> Stay sticky. A run of easy tasks keeps the small model warm; we only pay a load when we genuinely cross a tier boundary. That alone removes most thrash.</p></div>
+
+<h2>Three approaches (+ the hybrid I'd ship)</h2>
+
+<div class="grid two">
+  <div class="card">
+    <h3>A · Heuristic pre-router <span class="tag t-easy">cheap</span></h3>
+    <p>Rules over free features: prompt length, code-fence presence, keywords (<code>refactor/boilerplate/summarize</code> → easy; <code>architect/debug/why</code> → hard), gate type, <code>category</code>.</p>
+    <ul>
+      <li class="pro">~0 ms, deterministic, no extra model call, no swap to decide.</li>
+      <li class="con">Brittle — a short prompt can be brutal, a long one trivial (the papers flag this explicitly).</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>B · Small model as classifier <span class="tag t-mid">smart</span></h3>
+    <p>Ask the always-resident tiny model for a difficulty label before picking the worker model.</p>
+    <ul>
+      <li class="pro">Smarter than rules; "essentially free" at system level since the small model is already loaded (~200–500 ms).</li>
+      <li class="con">If it says "hard," you swap <em>anyway</em>; the classifier can be wrong; adds a call to every iterate.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>C · Category → static map <span class="tag t-easy">free signal</span></h3>
+    <p>Map the <code>category</code> we already collect to a starting tier + round budget. No new machinery.</p>
+    <ul>
+      <li class="pro">Zero new moving parts; uses a signal we already log and can validate against history.</li>
+      <li class="con">Coarse; agent-supplied (lazy/​wrong tags); blind to per-prompt difficulty.</li>
+    </ul>
+  </div>
+  <div class="card rec">
+    <h3>D · Hybrid <span class="tag t-rec">recommended</span></h3>
+    <p><strong>C as the base, A as a one-rule nudge, cascade as the net, sticky-resident to kill thrash.</strong> Category picks a tier + round budget; one structural nudge (executable gate ⇒ bump a tier, since code that must compile is hard for tiny models); never swap if routed tier == resident; the gate-driven cascade still runs underneath as the guarantee.</p>
+    <ul>
+      <li class="pro">Uses only free/known signals; no per-call classifier latency; swap-aware; safe failure mode (gate catches a bad floor).</li>
+      <li class="pro">Validatable <em>before</em> we build it, against the existing call log.</li>
+      <li class="con">Won't catch the "short prompt, secretly hard" case up front — but the cascade will, one rung later. Acceptable.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="h">Deferred on purpose (YAGNI): the LLM classifier (B).</div>
+  <p style="margin:0">It only earns its 200–500 ms if the cheap heuristic is wrong <em>often</em>. We don't know that yet. So ship D, keep logging <code>winning_rung</code> by category, and revisit B only if the data shows the floor is mis-picked enough to hurt. Don't pay for a classifier to solve a problem we haven't measured.</p>
+</div>
+
+<h2>The model ladder, sized to the ceiling</h2>
+<p>Routing tiers map to models known to fit, <strong>one big one at a time</strong>. Tiers are an ordering, not simultaneous residents:</p>
+<div class="ladder">
+TIER 0 · TINY    DeepSeek-Coder-V2-Lite-4bit   ~135 tok/s   small footprint<br>
+TIER 1 · FAST    Qwen2.5-Coder-7B-4bit         ~80 tok/s    small footprint<br>
+TIER 2 · MID     Qwen2.5-Coder-14B-4bit        ~28 tok/s    default · everyday<br>
+TIER 3 · QUALITY Qwen3-Coder-30B-A3B-4bit      ~51 tok/s    ~17 GB · one-big-at-a-time<br>
+<br>
+rule: routed_tier == resident_tier  →  no swap (stay sticky)<br>
+rule: never hold two TIER-2+/TIER-3 models resident together (24.5 GB ceiling)<br>
+rule: cascade still climbs on gate failure — routing only sets the <em>entry</em> rung
+</div>
+
+<h2>How I'd sequence it</h2>
+<p><span class="num">1</span><strong>Measure, don't guess.</strong> Add a tiny call-log analysis: for each <code>category</code>, what <code>winning_rung</code> distribution do we actually see? This tells us which categories are safe to route down and whether the signal is real. (We have the data today.)</p>
+<p><span class="num">2</span><strong>Routing table from evidence.</strong> Encode <code>category</code> → entry tier + max rounds, justified by step 1, with <code>other</code> ⇒ today's behavior so the change is strictly non-regressive.</p>
+<p><span class="num">3</span><strong>Swap-aware execution.</strong> Sticky-resident check; only swap on a genuine tier crossing; the existing one-rung climb design respects the ceiling.</p>
+<p><span class="num">4</span><strong>Log the routing decision.</strong> Add <code>entry_tier</code> + <code>swapped</code> to the call log so the dashboard can show whether routing is paying off (and feed a future B decision).</p>
+
+<h2>Open questions — your calls</h2>
+<div class="q"><b>Q1 · Aggression.</b> Should routing be allowed to start <em>above</em> the resident model (eager swap up for "hard" tasks), or only ever start at-or-below resident and let the cascade climb? Eager = fewer doomed rounds on hard tasks; conservative = never a wasted swap.</div>
+<div class="q"><b>Q2 · Signal trust.</b> Lead with <code>category</code> (agent-supplied, free) or with the gate type (objective, but only present when you pass a gate)? Or weight both?</div>
+<div class="q"><b>Q3 · Measure-first?</b> Do you want step 1 (the call-log analysis of rung-by-category) as its own quick artifact before we commit to a table — or are you happy to encode a sensible default table now and tune from the dashboard later?</div>
+<div class="q"><b>Q4 · Scope of TINY.</b> Is the DeepSeek tiny model trustworthy enough to ever be an <em>entry</em> tier, or should the floor be the 7B? (Tiny is 1.7× faster but lower quality.)</div>
+
+<footer>
+  <strong>Sources</strong>
+  <ul class="src">
+    <li><a href="https://github.com/lm-sys/routellm">RouteLLM (LMSYS) — cascade router, 85% cost cut</a></li>
+    <li><a href="https://arxiv.org/pdf/2502.00409">Survey: Routing Strategies for Resource Optimisation in LLM Systems</a></li>
+    <li><a href="https://arxiv.org/pdf/2603.04445">Dynamic Model Routing and Cascading for Efficient LLM Inference: A Survey</a></li>
+    <li><a href="https://portkey.ai/blog/task-based-llm-routing/">Task-Based LLM Routing (difficulty tiers: easy/medium/hard/needs_info)</a></li>
+    <li><a href="https://www.truefoundry.com/blog/llm-routing-cost-quality-aware-model-selection">Intelligent LLM Routing — classifier vs heuristic latency (~5 ms vs ~430 ms)</a></li>
+    <li><a href="https://medium.com/@michael.hannecke/the-model-router-running-a-team-of-local-llms-instead-of-one-big-one-fd75eeec9d39">The Model Router: a team of local LLMs instead of one big one</a></li>
+    <li><a href="https://arxiv.org/pdf/2510.12357">MoBiLE — MoE inference on consumer GPUs (resident-vs-swap economics)</a></li>
+    <li><a href="https://developer.nvidia.com/blog/cut-model-deployment-costs-while-keeping-performance-with-gpu-memory-swap/">NVIDIA — GPU memory swap cost</a></li>
+  </ul>
+</footer>
+</div>
+</body>
+</html>

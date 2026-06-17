@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warm-Pool Routing — Brainstorm v2</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --ink:#e6edf3; --dim:#9aa7b4;
+    --line:#2d3543; --accent:#58a6ff; --good:#3fb950; --warn:#d29922; --bad:#f85149;
+    --purple:#bc8cff; --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
+  .wrap{max-width:920px;margin:0 auto;padding:48px 24px 96px}
+  header h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
+  header .sub{color:var(--dim);font-size:15px;margin-bottom:8px}
+  .pill{display:inline-block;font:600 11px/1 var(--mono);text-transform:uppercase;
+    letter-spacing:.08em;padding:5px 9px;border-radius:999px;border:1px solid var(--line);
+    color:var(--dim);margin-right:6px}
+  .pill.hot{color:var(--accent);border-color:#1f476f;background:#0d2438}
+  .pill.new{color:var(--purple);border-color:#3d2a5c;background:#1a1226}
+  h2{font-size:22px;margin:44px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line);letter-spacing:-.01em}
+  h3{font-size:17px;margin:24px 0 8px}
+  p{margin:10px 0}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  .lead{font-size:18px;color:#cdd9e5}
+  code{font:13px/1.5 var(--mono);background:var(--panel2);padding:1px 6px;border-radius:5px;color:#cdd9e5}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:16px 0}
+  .card.rec{border-color:#1f5c2e;background:#0e1b12}
+  .card.warn{border-color:#5c4a1f;background:#1b160e}
+  .grid{display:grid;gap:14px}
+  @media(min-width:680px){.grid.two{grid-template-columns:1fr 1fr}}
+  .tag{font:600 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:3px 7px;border-radius:5px;display:inline-block}
+  .t-good{color:var(--good);background:#0e2417} .t-bad{color:var(--bad);background:#2a1414} .t-warn{color:var(--warn);background:#241d0e}
+  ul{margin:8px 0;padding-left:22px} li{margin:4px 0}
+  .pro::before{content:"▲ ";color:var(--good)} .con::before{content:"▼ ";color:var(--bad)}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  td code{font-size:12px}
+  .fit{color:var(--good);font-weight:600} .nofit{color:var(--bad);font-weight:600}
+  .spar{border-left:3px solid var(--line);padding:2px 0 2px 18px;margin:14px 0}
+  .spar .who{font:600 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--dim)}
+  .spar.b .who{color:var(--accent)} .spar.r .who{color:var(--purple)}
+  .spar p{margin:4px 0 0}
+  .callout{background:#0d2438;border:1px solid #1f476f;border-radius:10px;padding:16px 18px;margin:18px 0}
+  .callout.purple{background:#1a1226;border-color:#3d2a5c}
+  .callout .h{font-weight:700;color:var(--accent);margin-bottom:4px}
+  .callout.purple .h{color:var(--purple)}
+  .ladder{font:13px/1.7 var(--mono);background:var(--panel2);border-radius:10px;padding:16px 18px;color:#cdd9e5;overflow:auto}
+  .num{display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#04111f;font:700 13px/24px var(--mono);text-align:center;margin-right:8px}
+  .q{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--purple);border-radius:8px;padding:12px 16px;margin:10px 0}
+  .q b{color:var(--purple)}
+  .verdict{font-weight:700}
+  footer{margin-top:60px;color:var(--dim);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
+  .src li{margin:3px 0;font-size:13px}
+  .delta{background:#1a1226;border:1px solid #3d2a5c;border-radius:8px;padding:10px 14px;margin:14px 0;font-size:14px;color:#d8c9ee}
+  .delta b{color:var(--purple)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="pill new">Update · v2</span><span class="pill hot">Warm Pool</span><span class="pill">Refinement #2</span><span class="pill">No code yet</span>
+  <h1>Warm-Pool Routing</h1>
+  <div class="sub">Your question broke my premise — in a good way. · 2026-06-17</div>
+  <p class="lead">You asked: could we keep several small models <em>warm at once</em>, and only evict to load the big one? And could that spawn parallel local agents? Short version: <strong>the warm pool is right and changes the design; the parallel-agents part is half-right and I need to set expectations.</strong></p>
+</header>
+
+<div class="delta"><b>What changed since v1:</b> v1 assumed one model at a time, so I treated every tier switch as a multi-second "swap tax." That was wrong. oMLX's engine pool already holds multiple models — the real limit is <em>total memory</em>, and only the 30B is big enough to force an eviction. So the tax nearly vanishes for the small tiers.</div>
+
+<h2>Finding 1 — the warm pool is real <span class="tag t-good">confirmed</span></h2>
+<p>oMLX keeps multiple models resident and switches between them on demand; the only ceiling is total unified memory (~24.5 GB on your box). That means <strong>switching among the small/mid models is effectively free</strong> — they're already in memory. The cold-load cost only appears when we need the 30B, because it's the one model big enough to require kicking something out.</p>
+
+<h3>The memory math (4-bit, approximate)</h3>
+<table>
+  <tr><th>Combination</th><th>Footprint</th><th>Fits under ~24.5 GB?</th><th>Leaves for context/KV</th></tr>
+  <tr><td><code>7B + 14B</code></td><td>~12 GB</td><td class="fit">✓ comfortably</td><td>~12 GB</td></tr>
+  <tr><td><code>7B + 14B + DeepSeek-Lite</code></td><td>~20 GB</td><td class="fit">✓ tight</td><td>~4 GB</td></tr>
+  <tr><td><code>7B + 30B</code></td><td>~21 GB</td><td class="fit">✓ (fast + quality both warm!)</td><td>~3 GB</td></tr>
+  <tr><td><code>14B + 30B</code></td><td>~25 GB</td><td class="nofit">✗ over ceiling</td><td>—</td></tr>
+  <tr><td><code>30B</code> alone</td><td>~17 GB</td><td class="fit">✓</td><td>~7 GB</td></tr>
+</table>
+<div class="callout">
+  <div class="h">The key consequence</div>
+  <p style="margin:0">The 30B is the <em>only</em> model that forces an eviction decision, and it can <strong>still co-reside with the 7B</strong>. So a workable steady state is: <strong>keep 7B + 14B warm</strong> for everyday work (free routing between them); when a task is judged hard, evict the 14B to bring the 30B in alongside the 7B. The eager-swap you picked now costs ~nothing for the easy/medium tiers and only pays a load exactly when it's worth it — going to QUALITY.</p>
+</div>
+
+<h2>Finding 2 — "parallel agents" is half a win <span class="tag t-warn">caveat</span></h2>
+<div class="card warn">
+  <p style="margin-top:0">Holding models warm ≠ running them in parallel. Two hard facts:</p>
+  <ul>
+    <li><strong>One GPU, shared.</strong> Warm models still time-share a single Metal GPU. Run two "in parallel" and they interleave — you get concurrency (overlapping waits, queueing) but <em>not</em> 2× throughput. The compute serializes.</li>
+    <li><strong>MLX concurrent inference is currently buggy.</strong> There's an open issue: running independent models from separate threads triggers Metal assertion failures / crashes. Dedicated per-model streams crash too. So true simultaneous inference isn't a safe foundation today.</li>
+  </ul>
+  <p style="margin-bottom:0"><span class="verdict" style="color:var(--warn)">Verdict:</span> the parallel-agents idea is a great <em>programming model</em> (fan out subtasks, queue them, overlap I/O) but not a speedup, and the threading isn't stable yet. Treat warm-pool as a <strong>latency</strong> win (no cold loads), not a <strong>throughput</strong> win — and serialize GPU access behind a queue rather than firing concurrent inferences.</p>
+</div>
+
+<h2>Me, sparring with me — round 2</h2>
+<div class="spar r"><div class="who">Skeptic</div><p>If small models are free to switch, why route at all? Just always start on the 7B, let the gate climb to 14B (free), then 30B (one load). The cascade already does this and never guesses wrong.</p></div>
+<div class="spar b"><div class="who">Builder</div><p>Closer than before — with a warm pool the cascade is cheap. But two leaks remain. (1) The 30B load is still seconds; for a task we <em>know</em> is hard, eating two failed small rounds first is pure latency waste — eager routing skips straight to it. (2) The 30B at ~51 tok/s isn't even the slowest; the 14B is ~28 tok/s. Starting a trivial stub on the 14B is slower than the 7B at ~80. Routing trims both ends; the warm pool just makes the trimming nearly free.</p></div>
+<div class="spar r"><div class="who">Skeptic</div><p>You want to pre-warm 7B+14B. That's ~12 GB sitting resident, eating context headroom, even for a user who only ever does easy tasks. Wasteful.</p></div>
+<div class="spar b"><div class="who">Builder</div><p>It's a TTL/keep-alive policy, not a permanent pin. Warm the pool lazily — load a tier the first time it's routed to, keep it warm with an idle TTL, evict LRU when memory pressure demands (i.e., when the 30B needs room). That's exactly how Ollama's keep-alive works. Steady state adapts to the actual workload instead of pinning a guess.</p></div>
+<div class="spar r"><div class="who">Skeptic</div><p>Now the router has to track what's resident, memory budgets, eviction order, TTLs. That's a little memory manager. You've turned a routing tweak into a subsystem. YAGNI?</p></div>
+<div class="spar b"><div class="who">Builder</div><p>Legit risk. So lean on oMLX — <em>it already manages the engine pool and eviction.</em> We don't rebuild that. Our job is only: (a) pick the entry model from the task signal, (b) ask oMLX to ensure it's loaded, (c) let the existing cascade climb. The "memory manager" is one health-pool read, not a new component. If oMLX's own eviction is good enough, we add nothing; if it thrashes, <em>then</em> we add a hint. Measure first.</p></div>
+<div class="spar b"><div class="who">Builder</div><p>And the parallel angle isn't wasted — it just changes shape. Instead of "run 3 models at once," it's "a warm pool lets a future multi-agent workflow hand different subtasks to different <em>already-loaded</em> models without paying a load each time, served through one GPU queue." That's a real capability for later — just don't sell it as concurrency speedup.</p></div>
+
+<h2>Revised recommendation</h2>
+<div class="card rec">
+  <h3>Warm-pool eager routing <span class="tag t-good">recommended</span></h3>
+  <ol>
+    <li><strong>Tiered ladder, warm by demand.</strong> 7B (fast) ⟶ 14B (mid) ⟶ 30B (quality). Models load on first use and stay warm under oMLX's pool/TTL; we don't build our own evictor.</li>
+    <li><strong>Eager entry, free for small tiers.</strong> Task signal picks the entry model. Easy ⟶ 7B, medium ⟶ 14B (both already warm = no load), hard ⟶ ensure 30B loaded (the one real load), then run.</li>
+    <li><strong>Cascade stays the net.</strong> Gate failure still climbs a rung. A mis-picked easy floor self-heals at near-zero cost now.</li>
+    <li><strong>Serialize the GPU.</strong> One inference at a time behind a queue — no concurrent-model inference until MLX's threading bug is fixed. Warm pool = latency win, not throughput.</li>
+    <li><strong>Log it.</strong> Record entry tier + whether a load happened, so the dashboard shows if routing+warming is paying off.</li>
+  </ol>
+</div>
+<div class="callout purple">
+  <div class="h">Still deferred (YAGNI)</div>
+  <p style="margin:0">A trained classifier, a custom memory manager, and true parallel multi-model inference. All three are solving problems we either don't have yet or can't safely build today. Revisit when data or a fixed MLX says otherwise.</p>
+</div>
+
+<h2>Updated open questions — your calls</h2>
+<div class="q"><b>Q-A · Warm set.</b> Default warm pool of <code>7B + 14B</code> (everyday, ~12 GB), or <code>7B + 30B</code> (fast + quality always hot, skip 14B, ~21 GB but thin on context)? Or purely lazy — warm nothing, load each tier on first route and let TTL decide?</div>
+<div class="q"><b>Q-B · Who owns eviction.</b> Trust oMLX's engine pool to manage residency/eviction (we just request a model), or do we want our own keep-alive/LRU policy on top? I lean trust-oMLX-first, measure, add only if it thrashes.</div>
+<div class="q"><b>Q-B2 · The signal (still open from before).</b> What drives "this is hard → go 30B"? Gate type (objective: executable check ⟶ hard), category (always present but agent-supplied), or both with gate overriding category?</div>
+<div class="q"><b>Q-C · Parallel agents — now or note-for-later?</b> Park it as a documented future capability (warm pool enables it; GPU-queue + MLX-bug-fix gate it), or do you want me to prototype a serialized multi-model queue as part of this?</div>
+
+<footer>
+  <strong>Sources (v2 additions)</strong>
+  <ul class="src">
+    <li><a href="https://github.com/ml-explore/mlx/issues/3078">MLX #3078 — concurrent inference of independent models crashes (Metal assertions)</a></li>
+    <li><a href="https://ollama.com/blog/mlx">Ollama now powered by MLX on Apple Silicon — multi-model hold + keep-alive</a></li>
+    <li><a href="https://developer.apple.com/videos/play/wwdc2025/298/">WWDC25 — Explore LLMs on Apple silicon with MLX (unified memory)</a></li>
+    <li><a href="https://www.sitepoint.com/multiple-local-models-memory-management/">Running Multiple Local Models: memory management & silent CPU-fallback collapse</a></li>
+    <li><a href="https://www.spheron.network/blog/run-multiple-llms-one-gpu-mig-time-slicing-guide/">Run Multiple LLMs on One GPU — time-slicing vs MIG, latency under load</a></li>
+    <li><a href="https://github.com/ollama/ollama/issues/7069">Ollama #7069 — loading multiple models on the same GPU</a></li>
+  </ul>
+  <p>Carried over from v1: RouteLLM, the cascade/routing surveys, task-based routing tiers, and heuristic-vs-classifier latency.</p>
+</footer>
+</div>
+</body>
+</html>

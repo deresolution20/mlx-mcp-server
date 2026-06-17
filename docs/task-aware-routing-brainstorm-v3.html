@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Models & Councils — Brainstorm v3</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --ink:#e6edf3; --dim:#9aa7b4;
+    --line:#2d3543; --accent:#58a6ff; --good:#3fb950; --warn:#d29922; --bad:#f85149;
+    --purple:#bc8cff; --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
+  .wrap{max-width:920px;margin:0 auto;padding:48px 24px 96px}
+  header h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
+  header .sub{color:var(--dim);font-size:15px;margin-bottom:8px}
+  .pill{display:inline-block;font:600 11px/1 var(--mono);text-transform:uppercase;
+    letter-spacing:.08em;padding:5px 9px;border-radius:999px;border:1px solid var(--line);
+    color:var(--dim);margin-right:6px}
+  .pill.hot{color:var(--accent);border-color:#1f476f;background:#0d2438}
+  .pill.new{color:var(--purple);border-color:#3d2a5c;background:#1a1226}
+  h2{font-size:22px;margin:46px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line);letter-spacing:-.01em}
+  h3{font-size:17px;margin:24px 0 8px}
+  p{margin:10px 0} a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  .lead{font-size:18px;color:#cdd9e5}
+  code{font:13px/1.5 var(--mono);background:var(--panel2);padding:1px 6px;border-radius:5px;color:#cdd9e5}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:16px 0}
+  .card.rec{border-color:#1f5c2e;background:#0e1b12}
+  .card.warn{border-color:#5c4a1f;background:#1b160e}
+  .card.bad{border-color:#5c2222;background:#1b0e0e}
+  .tag{font:600 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:3px 7px;border-radius:5px;display:inline-block}
+  .t-good{color:var(--good);background:#0e2417} .t-bad{color:var(--bad);background:#2a1414} .t-warn{color:var(--warn);background:#241d0e}
+  ul{margin:8px 0;padding-left:22px} li{margin:4px 0}
+  .pro::before{content:"▲ ";color:var(--good)} .con::before{content:"▼ ";color:var(--bad)}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  td code{font-size:12px}
+  .fit{color:var(--good);font-weight:600} .nofit{color:var(--bad);font-weight:600} .meh{color:var(--warn);font-weight:600}
+  .spar{border-left:3px solid var(--line);padding:2px 0 2px 18px;margin:14px 0}
+  .spar .who{font:600 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--dim)}
+  .spar.b .who{color:var(--accent)} .spar.r .who{color:var(--purple)}
+  .spar p{margin:4px 0 0}
+  .callout{background:#0d2438;border:1px solid #1f476f;border-radius:10px;padding:16px 18px;margin:18px 0}
+  .callout.purple{background:#1a1226;border-color:#3d2a5c}
+  .callout.bad{background:#1b0e0e;border-color:#5c2222}
+  .callout .h{font-weight:700;color:var(--accent);margin-bottom:4px}
+  .callout.purple .h{color:var(--purple)} .callout.bad .h{color:var(--bad)}
+  .num{display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#04111f;font:700 13px/24px var(--mono);text-align:center;margin-right:8px}
+  .q{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--purple);border-radius:8px;padding:12px 16px;margin:10px 0}
+  .q b{color:var(--purple)}
+  .big{font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .big.bad{color:var(--bad)} .big.good{color:var(--good)}
+  footer{margin-top:60px;color:var(--dim);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
+  .src li{margin:3px 0;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="pill new">Update · v3</span><span class="pill hot">Model landscape</span><span class="pill hot">Councils</span><span class="pill">No code yet</span>
+  <h1>New Models & "A Bunch of 7Bs"</h1>
+  <div class="sub">You asked about GLM 5.2 and whether many small models working together would beat one big one. I researched both as hard as I could. · 2026-06-17</div>
+  <p class="lead">Two clean answers, one of them counterintuitive. <strong>GLM 5.2 can't run on your Mac — not close.</strong> And <strong>a bunch of 7Bs collaborating is a known trap</strong> — but there's a version of the idea that's genuinely good, and your gate is the secret weapon that makes it cheap.</p>
+</header>
+
+<h2>1 · GLM 5.2 — near-Opus, but not for this machine <span class="tag t-bad">verdict: no</span></h2>
+<div class="card bad">
+  <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:baseline">
+    <div><div class="big bad">743B</div><div class="sub">total parameters</div></div>
+    <div><div class="big bad">418 GB</div><div class="sub">at 4-bit (MLX)</div></div>
+    <div><div class="big bad">~512 GB</div><div class="sub">RAM to run it</div></div>
+    <div><div class="big">24.5 GB</div><div class="sub">your ceiling</div></div>
+  </div>
+  <p style="margin-bottom:0">GLM 5.2 is a 743B-param sparse MoE (256 experts, DeepSeek-V3.2-style attention). The 4-bit MLX build is <strong>418 GB on disk</strong> and is described as "tight on 512 GB" RAM. Even the most compressed mixed 3.6-bit variant needs ~360 GB. It is a frontier-scale model — runnable on a 512 GB Mac Studio Ultra or a cluster, not a 24.5 GB box. <strong>Off the table locally.</strong></p>
+</div>
+<div class="callout bad">
+  <div class="h">The uncomfortable truth this surfaces</div>
+  <p style="margin:0">"Near-Opus, but local" and "fits in 24.5 GB" are, in mid-2026, mutually exclusive. The models that rival frontier APIs are all 400B–1T params — they need 256–512 GB. On your hardware, local LLMs are a <em>different weight class</em>: very good for bounded, verifiable work, not a drop-in Opus replacement. That's exactly why the offload tool's wedge is <strong>privacy + the easy/medium slice of work</strong>, not "replace Claude on hard reasoning." The router should embrace that, not fight it.</p>
+</div>
+
+<h2>2 · What actually fits — and a ladder refresh worth doing</h2>
+<p>The current sweet spot for 24 GB hasn't moved tiers, but the <em>generation</em> has — your ladder is on Qwen <strong>2.5</strong>; the 3.6 line is out and meaningfully better at code.</p>
+<table>
+  <tr><th>Tier</th><th>Current (2.5 gen)</th><th>2026 upgrade (3.6 gen)</th><th>Fit @ 24.5 GB</th><th>Note</th></tr>
+  <tr><td>FAST</td><td><code>Qwen2.5-Coder-7B</code></td><td><code>Qwen3-7B</code></td><td class="fit">✓ ~4 GB</td><td>HumanEval 76 — best under 8B</td></tr>
+  <tr><td>MID</td><td><code>Qwen2.5-Coder-14B</code></td><td><code>Qwen3.6-27B</code> dense Q4</td><td class="meh">△ tight</td><td>SWE-bench 77.2% — strong</td></tr>
+  <tr><td>QUALITY</td><td><code>Qwen3-Coder-30B-A3B</code></td><td><code>Qwen3.6-35B-A3B</code> MoE 4-bit</td><td class="fit">✓ ~17–18 GB</td><td>30B knowledge, 3B speed</td></tr>
+</table>
+<p style="color:var(--dim);font-size:14px">Not urgent, but if we're touching routing anyway, pulling the rungs up a generation is low-risk and free quality. Worth a quick eval pass before committing.</p>
+
+<h2>3 · "Would a bunch of 7Bs working together work well?"</h2>
+<p>This is the juicy one, and the literature has a real plot twist. Here's the honest arc:</p>
+
+<div class="card">
+  <h3>The optimistic case — Mixture-of-Agents (MoA) <span class="tag t-good">real, but…</span></h3>
+  <p>Together's MoA showed multiple open models, layered (proposers → aggregator, each layer reading the previous layer's answers), scoring <strong>65.1% on AlpacaEval 2.0 vs GPT-4o's 57.5%</strong>. Collaboration genuinely lifts quality — models write better answers when they can see peers' attempts.</p>
+  <p style="margin-bottom:0;color:var(--dim)"><strong>The catch:</strong> MoA's proposers were 110B-class models. The result is "big diverse models collaborate," not "small models collaborate."</p>
+</div>
+
+<div class="card warn">
+  <h3>The plot twist — Self-MoA (Princeton, ICLR) <span class="tag t-warn">this changes the answer</span></h3>
+  <p>A follow-up asked: is <em>mixing different</em> models actually the point? They found MoA is <strong>highly sensitive to proposer quality</strong> — there's a quality–diversity trade-off, and chasing diversity drags in weak models that <em>drop</em> the result. Their <strong>Self-MoA</strong> (sample the single <em>best</em> model many times and aggregate) <strong>beat mixed-MoA by 6.6%</strong> on AlpacaEval and +3.8% across MMLU/CRUX/MATH.</p>
+  <div class="callout warn" style="margin:10px 0 0">
+    <div class="h" style="color:var(--warn)">So: "a bunch of 7Bs" is precisely the weak-proposer regime Self-MoA warns against.</div>
+    <p style="margin:0">Three diverse 7Bs voting tends to do <em>worse</em> than sampling your one best model three times. Diversity only pays when every voice is already strong. Your strongest fit-able voice is the 30B/35B — not a committee of 7Bs.</p>
+  </div>
+</div>
+
+<div class="card rec">
+  <h3>The version that's actually good — Best-of-N with <em>your gate</em> as the verifier <span class="tag t-good">recommended shape</span></h3>
+  <p>Best-of-N sampling: generate N candidates, a <strong>verifier</strong> picks the best. The research uses learned verifiers — <strong>but you already have a perfect one for code: the gate.</strong> <code>py_compile</code>, a test command, a JSON-schema check — an objective, free oracle. So the pragmatic "ensemble" is: <strong>sample N candidates, run each through the gate, return the first that passes.</strong> No aggregator LLM, no voting heuristics — the gate <em>is</em> the selector, and it's already built.</p>
+  <ul>
+    <li class="pro">Pairs with Self-MoA: sample the <em>best fit-able</em> model N times (in-model diversity), gate-select. Optionally seed one candidate from a second model for cheap diversity.</li>
+    <li class="pro">Strictly safe: a candidate only "wins" by objectively passing the gate. Worse than today is impossible.</li>
+    <li class="con">N candidates = N inferences. On one GPU they <strong>serialize</strong> — latency ≈ N×. Earns its cost only when single-shot pass-rate is low.</li>
+  </ul>
+</div>
+
+<h2>4 · Can <em>this tool</em> coordinate it?</h2>
+<p>Short answer: <strong>not <code>iterate</code> — it's the wrong shape — but yes, as a sibling tool.</strong></p>
+<table>
+  <tr><th>Pattern</th><th>Control flow</th><th>Tool</th></tr>
+  <tr><td><code>iterate</code> (today)</td><td>Sequential cascade: try → gate → retry/climb → escalate. <em>One</em> line of attempts.</td><td>exists</td></tr>
+  <tr><td>Best-of-N "council"</td><td>Fan out N candidates → gate-filter → return a winner (or escalate if none pass).</td><td><strong>new sibling</strong></td></tr>
+</table>
+<p>The warm pool from v2 makes the substrate cheap: three 7Bs co-reside in ~12 GB, so a council holds its members hot with no per-call load. <strong>But</strong> the v2 caveat bites harder here — one GPU serializes the N inferences (and MLX's concurrent-model threading still crashes), so a council is a <em>latency-for-quality</em> trade, queued, not parallel. It's coordinatable; it just isn't free, and it isn't fast.</p>
+
+<h2>Me, sparring with me — round 3</h2>
+<div class="spar r"><div class="who">Skeptic</div><p>A council of 7Bs sounds cool and democratic. Build it.</p></div>
+<div class="spar b"><div class="who">Builder</div><p>Self-MoA says it's the wrong cool. Mixing weak models underperforms sampling one strong model. If we want N opinions, sample the 30B N times, not three 7Bs once. "Bunch of 7Bs" loses to "one good model, a few times."</p></div>
+<div class="spar r"><div class="who">Skeptic</div><p>Then sample the 30B N times. Best-of-N, gate picks the winner. Ship it as the headline feature.</p></div>
+<div class="spar b"><div class="who">Builder</div><p>Careful — that's N× latency on one GPU, and <code>iterate</code> already gets most of the benefit by feeding gate failures back in for a <em>guided</em> retry. Best-of-N is <em>blind</em> resampling; iterate's retry is <em>informed</em>. For code with a compile/test gate, informed retry usually beats blind N-sampling per unit of latency. Best-of-N wins when failures are about unlucky sampling, not misunderstanding — and we don't yet know which we have.</p></div>
+<div class="spar r"><div class="who">Skeptic</div><p>So all this research and the answer is "don't build the councils"? Anticlimactic.</p></div>
+<div class="spar b"><div class="who">Builder</div><p>The answer is "we now know what <em>not</em> to build, and why" — that's worth a lot. GLM-class local is a hardware fantasy on 24 GB; weak-model councils are a Self-MoA trap; blind best-of-N is a latency tax that informed retry often beats. What survives is sharp: <strong>refresh the ladder a generation, keep the warm-pool eager router, and hold best-of-N as a measured experiment gated on real single-shot failure rates.</strong> Negative results that stop us wasting weeks are the most valuable output of a spar.</p></div>
+<div class="spar b"><div class="who">Builder</div><p>One genuinely new keeper, though: the gate-as-verifier framing. We built the gate for self-correction; it doubles as a free best-of-N selector the day we want one. That's latent capability worth writing down.</p></div>
+
+<h2>Where this leaves the design</h2>
+<div class="card rec">
+  <p style="margin-top:0"><strong>Unchanged core:</strong> warm-pool eager routing (v2). <strong>New from v3:</strong></p>
+  <ol>
+    <li><strong>Don't chase frontier-local.</strong> GLM 5.2 etc. need 256–512 GB. The router's job is to win the easy/medium slice + privacy, and escalate hard reasoning to Claude — by design.</li>
+    <li><strong>Refresh the ladder a generation</strong> (Qwen 2.5 → 3.6), pending a quick eval.</li>
+    <li><strong>No weak-model councils.</strong> Self-MoA: a committee of 7Bs underperforms one strong model sampled repeatedly.</li>
+    <li><strong>Park best-of-N as a measured experiment.</strong> A sibling <code>council</code> tool, gate-as-verifier, justified only if logs show high single-shot failure rates that informed retry isn't already fixing.</li>
+  </ol>
+</div>
+
+<h2>Open questions — your calls</h2>
+<div class="q"><b>Q1 · Ladder refresh.</b> Want me to fold a "bump rungs to Qwen 3.6" eval into this work, or keep model choice frozen on 2.5 for now and only build the routing logic?</div>
+<div class="q"><b>Q2 · Best-of-N.</b> Park it as a documented future <code>council</code> tool (my lean), or do you want it prototyped now alongside the router so you can feel the latency/quality trade yourself?</div>
+<div class="q"><b>Q3 · Frontier-local later.</b> Is a bigger Mac (128–512 GB) ever on the table? If "maybe," I'd keep the model ladder pluggable so a 100B-class tier can drop in without a rewrite. If "no," we hard-optimize for the 24 GB envelope.</div>
+<div class="q"><b>Q-carryover · Warm set + signal.</b> Still open from v2: default warm pool (<code>7B+14B</code> vs lazy/TTL), trust-oMLX-eviction vs our own, and what drives "hard → go big" (gate type vs category vs both).</div>
+
+<footer>
+  <strong>Sources (v3)</strong>
+  <ul class="src">
+    <li><a href="https://huggingface.co/pipenetwork/GLM-5.2-MLX-4bit">GLM-5.2-MLX-4bit — 743B params, 418 GB @ 4-bit, ~512 GB RAM</a></li>
+    <li><a href="https://github.com/togethercomputer/moa">Together MoA — 65.1% AlpacaEval with OSS models</a> · <a href="https://arxiv.org/abs/2406.04692">paper</a></li>
+    <li><a href="https://arxiv.org/abs/2502.00674">Rethinking Mixture-of-Agents / Self-MoA (Princeton) — single-model ensembles beat mixed</a></li>
+    <li><a href="https://arxiv.org/pdf/2502.20379">Multi-Agent Verification (BoN-MAV) — best-of-N + aspect verifiers</a></li>
+    <li><a href="https://www.emergentmind.com/topics/verifier-guided-generation">Verifier-Guided Generation — best-of-N with rule-based/oracle verifiers</a></li>
+    <li><a href="https://willitrunai.com/blog/best-local-coding-llms-apple-silicon-24gb">Best coding LLMs for Apple Silicon 24 GB (2026)</a></li>
+    <li><a href="https://www.promptquorum.com/local-llms/best-local-llms-for-coding">Best local coding LLMs 2026 — Qwen 3.6 / Devstral / Kimi</a></li>
+  </ul>
+  <p>Carried over: v1 routing/cascade sources, v2 warm-pool / MLX concurrency-bug / single-GPU time-slicing sources.</p>
+</footer>
+</div>
+</body>
+</html>

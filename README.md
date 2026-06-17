@@ -102,10 +102,12 @@ These models were live-tested on an **M5 MacBook Pro (32 GB)** and benchmarked w
 |------|-------|-----|-------|----------|
 | ⚡ Turbo | `DeepSeek-Coder-V2-Lite-Instruct-4bit-mlx` | ~8 GB | ~135 | Quick lookups, boilerplate, instant subagent calls |
 | ⚡ Fast | `Qwen2.5-Coder-7B-Instruct-4bit` | ~5 GB | ~80 | Speed fallback, lightweight code tasks |
-| ⚖️ Default | `Qwen2.5-Coder-14B-Instruct-4bit` | ~9 GB | ~28 | Reliable everyday coding, code review |
-| 🧠 Quality | `Qwen3-Coder-30B-A3B-Instruct-MLX-4bit` | ~18 GB | ~51 | Best coding quality — MoE (3B active params), no thinking mode |
+| ⚖️ Everyday | `Qwen2.5-Coder-14B-Instruct-4bit` | ~9 GB | ~28 | Reliable everyday coding, code review |
+| 🧠 **Default** | `Qwen3-Coder-30B-A3B-Instruct-MLX-4bit` | ~18 GB | ~51 | Best quality **and the shipped default** — MoE (3B active params), no thinking mode |
 
 The quality tier runs at **~51 tok/s despite 30B parameters** because it's a Mixture of Experts model — only ~3B parameters are active per token. It fits in 18 GB and doesn't activate a thinking chain, making it ideal for subagent use.
+
+**As of v0.2.4 the 30B-A3B is the shipped default.** A 24-case gated eval across six task categories (see [reports](#design--eval-reports) below) found it passes everything at **~0.6 s median latency — as fast as the turbo tier** — so there's no reason to default to a smaller model and escalate. The earlier multi-model "warm pool" scaffolding was dropped: the MoE makes the big model cheap enough to simply be the default.
 
 ---
 
@@ -138,6 +140,17 @@ During development, several models were evaluated. Here's what was tested and wh
 - **Avoid thinking models for subagent use.** `Qwen3.6-35B-A3B` and other `/think`-default models spend thousands of tokens reasoning before outputting a single word. Claude already handles the reasoning — your local model just needs to answer.
 - **Benchmark on your hardware.** Published tok/s numbers for Gemma 3 27B QAT diverged significantly from measured M5/32GB performance. Always verify with `quick_test` before committing to a model.
 - **`enable_thinking` payload safety.** The client only sends `enable_thinking: true` when explicitly requested. Sending `enable_thinking: false` unconditionally causes 400 errors on models that don't recognise the field (e.g., Gemma 4). See [#1559](https://github.com/ml-explore/mlx-lm/issues/1559) for the DFlash speculative decoding issue that routes Gemma 4 output to `reasoning_content`.
+- **On bounded work, speed is the differentiator — not quality.** The gated eval harness (`python -m mlx_mcp_server.eval run`) found every coding model passes nearly all easy/medium cases; they separate on latency. The MoE 30B-A3B wins by being top-quality *and* turbo-fast. (Harder cases that separate models on quality are what the Phase-2 capture loop is for.)
+- **You can't sweep all models in one engine pool.** Loading the small models first fills the ~24.5 GB pool, so the big ones then return `507 Insufficient Storage`. Evaluate big models in isolation (one ~17 GB model at a time). This warm-pool/eviction limit is a hard constraint for any future auto-ladder selector.
+
+### Design & eval reports
+
+Research notes and measured results captured during development (open in a browser):
+
+- [`docs/eval-results-report.html`](docs/eval-results-report.html) — full 5-model gated eval: pass-rate, latency, and tokens per task category, with the ladder recommendation.
+- [`docs/task-aware-routing-brainstorm.html`](docs/task-aware-routing-brainstorm.html) — routing design v1: cascade vs. pre-route under a memory ceiling.
+- [`docs/task-aware-routing-brainstorm-v2.html`](docs/task-aware-routing-brainstorm-v2.html) — v2: the warm-pool reframe and the single-GPU parallelism reality check.
+- [`docs/task-aware-routing-brainstorm-v3.html`](docs/task-aware-routing-brainstorm-v3.html) — v3: GLM-5.2 won't fit 24 GB; Self-MoA shows weak-model councils underperform; best-of-N with the gate as verifier.
 
 ---
 
@@ -335,9 +348,7 @@ Install with `--full` or `--with-commands` to get these in `~/.claude/commands/`
 
 | Command | What it does |
 |---------|--------------|
-| `/switch-model` | List available models and switch interactively |
-| `/big-model` | Free RAM by closing apps, then load the 30B quality model |
-| `/big-model-done` | Switch back to 14B and reopen closed apps |
+| `/switch-model` | List available models (queried live from oMLX, so new downloads appear automatically) and switch interactively |
 | `/mlx-help` | Display a live reference card (pulls config via `get_config`) |
 
 ---

@@ -1,0 +1,79 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local Model Eval — Results</title><style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c2230;--ink:#e6edf3;--dim:#9aa7b4;--line:#2d3543;--accent:#58a6ff;--good:#3fb950;--warn:#d29922;--bad:#f85149;--purple:#bc8cff;--mono:"SF Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:940px;margin:0 auto;padding:48px 24px 96px}
+h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em}.sub{color:var(--dim);font-size:15px}
+h2{font-size:22px;margin:46px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.pill{display:inline-block;font:600 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:5px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim);margin-right:6px}
+.pill.hot{color:var(--accent);border-color:#1f476f;background:#0d2438}
+.lead{font-size:18px;color:#cdd9e5}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left}
+th{background:var(--panel2);color:var(--dim);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+td.c,.hm{text-align:center;font-variant-numeric:tabular-nums}
+.mname{font-weight:600;white-space:nowrap}
+.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.hm.good{background:rgba(63,185,80,.16)}.hm.warn{background:rgba(210,153,34,.16)}.hm.bad{background:rgba(248,81,73,.18)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:16px 0}
+.card.rec{border-color:#1f5c2e;background:#0e1b12}.card.warn{border-color:#5c4a1f;background:#1b160e}
+.callout{background:#0d2438;border:1px solid #1f476f;border-radius:10px;padding:16px 18px;margin:18px 0}
+.callout.bad{background:#1b0e0e;border-color:#5c2222}.callout .h{font-weight:700;color:var(--accent);margin-bottom:4px}.callout.bad .h{color:var(--bad)}
+code{font:13px/1.5 var(--mono);background:var(--panel2);padding:1px 6px;border-radius:5px}
+ul{padding-left:22px}li{margin:5px 0}
+.tag{font:600 11px/1 var(--mono);padding:3px 7px;border-radius:5px}.t-rec{color:var(--good);background:#0e2417}
+.big{font-size:34px;font-weight:800;letter-spacing:-.02em}
+.note{color:var(--dim);font-size:13px}
+footer{margin-top:50px;color:var(--dim);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
+</style></head><body><div class="wrap">
+<span class="pill hot">Eval Results</span><span class="pill">5 models × 24 gated cases</span><span class="pill">2026-06-17</span>
+<h1>Local Model Eval — Results</h1>
+<div class="sub">Which installed model wins per task, measured on your machine. Quality = gate pass-rate · Speed = median latency · Cost = mean output tokens.</div>
+<p class="lead">Headline: on bounded easy/medium work, <strong>every coding model passes nearly everything — so the differentiator is speed, not quality.</strong> And the surprise: the 30B MoE is as fast as the tiny model while having the most headroom. The reasoning model and the 14B are the losers.</p>
+
+<h2>The ladder I'd pick</h2>
+<div class="card rec">
+<p style="margin-top:0"><span class="tag t-rec">recommended</span> &nbsp;Two rungs cover the offload workload:</p>
+<ul>
+<li><strong>Default / quality rung → Qwen3-Coder-30B-A3B.</strong> 24/24 <em>and</em> ~650ms median — it's a Mixture-of-Experts (only 3B active per token), so it runs at small-model speed while holding 30B-class knowledge. Best of both; make it the everyday model.</li>
+<li><strong>Turbo floor → DeepSeek-Coder-V2-Lite.</strong> 24/24 at ~540ms, the fastest. Ideal for trivial boilerplate/extract bursts where you want instant.</li>
+<li><strong>Drop the 14B from the offload path.</strong> 24/24 but the <em>slowest</em> of the capable group (~1.7s) with no quality edge on this suite. It earns its place only if harder cases later separate it from the 7B.</li>
+<li><strong>Reserve the 27B Opus-Distilled for genuine reasoning, not offload.</strong> ~30s median is 45× the 30B — unusable for quick tasks.</li>
+</ul>
+</div>
+
+<h2>Per-model summary</h2>
+<table><tr><th>Model</th><th>Pass</th><th>Median latency</th><th>Mean tokens</th></tr>
+<tr><td class="mname">DeepSeek-Coder-V2-Lite (turbo)</td><td class="good c">24/24</td><td class="c">544ms</td><td class="c">37</td></tr><tr><td class="mname">Qwen2.5-Coder-7B (fast)</td><td class="good c">24/24</td><td class="c">922ms</td><td class="c">27</td></tr><tr><td class="mname">Qwen2.5-Coder-14B (everyday)</td><td class="good c">24/24</td><td class="c">1.7s</td><td class="c">28</td></tr><tr><td class="mname">Qwen3-Coder-30B-A3B (quality, MoE)</td><td class="good c">24/24</td><td class="c">649ms</td><td class="c">28</td></tr><tr><td class="mname">Qwen3.5-27B Opus-Distilled (reasoning)</td><td class="warn c">22/24</td><td class="c">29.5s</td><td class="c">264</td></tr></table>
+<p class="note">Pass = gate pass-rate across all 24 cases. Latency = median wall-clock per case. Tokens = mean completion tokens (cost/verbosity proxy).</p>
+
+<h2>Quality heatmap — gate pass-rate by category</h2>
+<table><tr><th>Model</th><th>boilerplate</th><th>summarize</th><th>extract</th><th>review</th><th>explain</th><th>codegen</th></tr><tr><td class="mname">DeepSeek-Coder-V2-Lite (turbo)</td><td class="hm good" title="1107.5ms · 53 tok">4/4</td><td class="hm good" title="496.0ms · 37 tok">4/4</td><td class="hm good" title="432.0ms · 17 tok">4/4</td><td class="hm good" title="327.0ms · 10 tok">4/4</td><td class="hm good" title="583.0ms · 42 tok">4/4</td><td class="hm good" title="950.0ms · 64 tok">4/4</td></tr><tr><td class="mname">Qwen2.5-Coder-7B (fast)</td><td class="hm good" title="1.9s · 40 tok">4/4</td><td class="hm good" title="831.5ms · 26 tok">4/4</td><td class="hm good" title="684.0ms · 15 tok">4/4</td><td class="hm good" title="315.0ms · 3 tok">4/4</td><td class="hm good" title="1273.5ms · 42 tok">4/4</td><td class="hm good" title="1242.0ms · 36 tok">4/4</td></tr><tr><td class="mname">Qwen2.5-Coder-14B (everyday)</td><td class="hm good" title="4.2s · 48 tok">4/4</td><td class="hm good" title="1.7s · 21 tok">4/4</td><td class="hm good" title="1121.0ms · 13 tok">4/4</td><td class="hm good" title="482.5ms · 3 tok">4/4</td><td class="hm good" title="2.4s · 44 tok">4/4</td><td class="hm good" title="2.2s · 41 tok">4/4</td></tr><tr><td class="mname">Qwen3-Coder-30B-A3B (quality, MoE)</td><td class="hm good" title="917.5ms · 34 tok">4/4</td><td class="hm good" title="647.0ms · 22 tok">4/4</td><td class="hm good" title="516.5ms · 12 tok">4/4</td><td class="hm good" title="372.0ms · 3 tok">4/4</td><td class="hm good" title="677.5ms · 41 tok">4/4</td><td class="hm good" title="1155.5ms · 54 tok">4/4</td></tr><tr><td class="mname">Qwen3.5-27B Opus-Distilled (reasoning)</td><td class="hm good" title="20.3s · 202 tok">4/4</td><td class="hm good" title="26.7s · 214 tok">4/4</td><td class="hm good" title="26.5s · 238 tok">4/4</td><td class="hm good" title="41.1s · 371 tok">4/4</td><td class="hm good" title="33.4s · 263 tok">4/4</td><td class="hm warn" title="35.8s · 300 tok">2/4</td></tr></table>
+<p class="note">Hover a cell for its latency + tokens. Only the reasoning model dropped cases — and those were <em>gate</em> failures: it wraps code in chain-of-thought prose, so the whole-output compile check fails.</p>
+
+<h2>Speed heatmap — median latency by category</h2>
+<table><tr><th>Model</th><th>boilerplate</th><th>summarize</th><th>extract</th><th>review</th><th>explain</th><th>codegen</th></tr><tr><td class="mname">DeepSeek-Coder-V2-Lite (turbo)</td><td class="hm good">1107.5ms</td><td class="hm good">496.0ms</td><td class="hm good">432.0ms</td><td class="hm good">327.0ms</td><td class="hm good">583.0ms</td><td class="hm good">950.0ms</td></tr><tr><td class="mname">Qwen2.5-Coder-7B (fast)</td><td class="hm warn">1.9s</td><td class="hm good">831.5ms</td><td class="hm good">684.0ms</td><td class="hm good">315.0ms</td><td class="hm good">1273.5ms</td><td class="hm good">1242.0ms</td></tr><tr><td class="mname">Qwen2.5-Coder-14B (everyday)</td><td class="hm warn">4.2s</td><td class="hm warn">1.7s</td><td class="hm good">1121.0ms</td><td class="hm good">482.5ms</td><td class="hm warn">2.4s</td><td class="hm warn">2.2s</td></tr><tr><td class="mname">Qwen3-Coder-30B-A3B (quality, MoE)</td><td class="hm good">917.5ms</td><td class="hm good">647.0ms</td><td class="hm good">516.5ms</td><td class="hm good">372.0ms</td><td class="hm good">677.5ms</td><td class="hm good">1155.5ms</td></tr><tr><td class="mname">Qwen3.5-27B Opus-Distilled (reasoning)</td><td class="hm bad">20.3s</td><td class="hm bad">26.7s</td><td class="hm bad">26.5s</td><td class="hm bad">41.1s</td><td class="hm bad">33.4s</td><td class="hm bad">35.8s</td></tr></table>
+<p class="note">Green &lt;1.5s · amber &lt;6s · red ≥6s. The 27B reasoning model is off-the-charts slow (20–41s per case).</p>
+
+<h2>The operational finding (matters for the product)</h2>
+<div class="callout bad"><div class="h">You cannot sweep all 5 models in one pool — the warm pool OOMs.</div>
+<p style="margin:0">The first full sweep loaded the small models first; by the time the big ones were requested, the engine pool was full and they returned <code>507 Insufficient Storage</code> (and the 14B got knocked over with 400/connection errors under the pressure). The harness's resilience held — it recorded failures instead of crashing — and clean numbers came from running each big model <strong>in isolation</strong> (one big model at a time fits; two ~17GB models do not, under the ~24.5GB ceiling).</p></div>
+<p>This is the exact warm-pool/eviction problem the routing design flagged — now proven empirically on your hardware. It directly shapes the deferred <strong>auto-ladder selector</strong>: it must evict before loading a big model, and never try to co-resident two big ones. A practical sweep harness needs a "big models run solo" mode.</p>
+
+<h2>Caveats — read before trusting the ladder</h2>
+<div class="card warn"><ul style="margin:0">
+<li><strong>This suite is easy/medium.</strong> Every model passing ~everything means the suite doesn't yet separate them on <em>quality</em> — only speed. Harder cases (multi-step refactors, tricky debugging) would likely spread the field and justify the 30B/14B over the 7B/turbo. That's what Phase 2 capture + weekly review is for: grow the suite with real, harder prompts.</li>
+<li><strong>The 27B's 2 misses are gate artifacts, not wrongness.</strong> Its answers were likely correct but wrapped in reasoning prose; a code-extraction step (not just fence-stripping) would recover them. Don't read 22/24 as "lower quality."</li>
+<li><strong>Latency is single-run median, warm model.</strong> Cold-load (first call after a swap) adds seconds and isn't in these numbers.</li>
+</ul></div>
+
+<h2>Next steps</h2>
+<ul>
+<li>Set <strong>Qwen3-Coder-30B-A3B as the default</strong> offload model and <strong>DeepSeek-Lite as the turbo floor</strong>; retire the 14B from the offload path.</li>
+<li>Grafana now shows this consolidated run in the <strong>"Model Eval"</strong> row (5 models, latest run).</li>
+<li>Phase 2: capture real prompts → weekly review → grow the suite with <em>harder</em> cases so quality (not just speed) gets measured.</li>
+<li>Auto-ladder selector must encode the one-big-model-at-a-time rule this eval just proved.</li>
+</ul>
+<footer>Generated from <code>~/.omlx/eval-results.jsonl</code> · 5 models × 24 gated cases across 6 categories · big models evaluated in isolation due to the memory ceiling. Counts/labels only — no prompt or output text stored.</footer>
+</div></body></html>
