@@ -104,3 +104,47 @@ async def test_token_totals_accumulate_across_rounds():
     )
     assert r.prompt_tokens == 15  # 3 rounds × 5
     assert r.completion_tokens == 9  # 3 rounds × 3
+
+
+# ── Resilience: backend errors degrade to escalation, never crash ─────────────
+
+@pytest.mark.asyncio
+async def test_backend_error_every_round_escalates_not_crashes():
+    async def chat_fn(message, system_prompt=""):
+        raise RuntimeError("507 Insufficient Storage")
+    r = await run_iterate(
+        chat_fn=chat_fn, message="x", max_local_rounds=2,
+        gate_fn=lambda t: structural_gate(t, schema_keys=["ok"]),
+    )
+    assert r.escalate is True
+    assert r.passed is False
+    assert r.winning_rung == "escalated"
+    assert any("backend error" in h for h in r.history)
+
+
+@pytest.mark.asyncio
+async def test_backend_error_then_recovers_passes_locally():
+    seq = [RuntimeError("boom"), '{"ok": 1}']
+    calls = {"i": 0}
+    async def chat_fn(message, system_prompt=""):
+        v = seq[min(calls["i"], len(seq) - 1)]
+        calls["i"] += 1
+        if isinstance(v, Exception):
+            raise v
+        return FakeResp(content=v)
+    r = await run_iterate(
+        chat_fn=chat_fn, message="x", max_local_rounds=2,
+        gate_fn=lambda t: structural_gate(t, schema_keys=["ok"]),
+    )
+    assert r.passed is True
+    assert r.winning_rung == "local"
+    assert r.rounds == 2
+
+
+@pytest.mark.asyncio
+async def test_no_gate_backend_error_escalates():
+    async def chat_fn(message, system_prompt=""):
+        raise RuntimeError("backend down")
+    r = await run_iterate(chat_fn=chat_fn, message="summarize", gate_fn=None)
+    assert r.escalate is True
+    assert r.passed is False

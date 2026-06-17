@@ -59,9 +59,24 @@ async def run_iterate(
             history=history,
         )
 
-    # No gate: single shot, Claude verifies.
+    async def run_round(msg):
+        """One attempt + gate -> (passed, feedback). A backend error (oMLX down,
+        507 out-of-memory, timeout, ...) becomes a failed round so the ladder
+        degrades to escalation instead of crashing the tool."""
+        try:
+            resp = await attempt(msg)
+        except Exception as e:
+            return False, f"backend error: {e}"
+        gr = gate_fn(resp.content)
+        return gr.passed, gr.feedback
+
+    # No gate: single local attempt, Claude verifies. A backend error escalates.
     if gate_fn is None:
-        await attempt(message)
+        try:
+            await attempt(message)
+        except Exception as e:
+            history.append(f"backend error: {e}")
+            return result(last_content, False, True, 1, "escalated")
         return result(last_content, None, False, 1, "local")
 
     rounds = 0
@@ -70,11 +85,10 @@ async def run_iterate(
     for i in range(max_local_rounds):
         rounds += 1
         msg = message if i == 0 else _retry_message(message, history[-1])
-        resp = await attempt(msg)
-        gr = gate_fn(resp.content)
-        if gr.passed:
-            return result(resp.content, True, False, rounds, "local")
-        history.append(gr.feedback)
+        passed, feedback = await run_round(msg)
+        if passed:
+            return result(last_content, True, False, rounds, "local")
+        history.append(feedback)
 
     # Rung 2: bump to a bigger local model for one attempt (still free).
     if big_model and set_model_fn and get_model_fn:
@@ -82,11 +96,11 @@ async def run_iterate(
         try:
             set_model_fn(big_model)
             rounds += 1
-            resp = await attempt(_retry_message(message, history[-1]))
-            gr = gate_fn(resp.content)
-            if gr.passed:
-                return result(resp.content, True, False, rounds, "local_big")
-            history.append(gr.feedback)
+            passed, feedback = await run_round(
+                _retry_message(message, history[-1] if history else ""))
+            if passed:
+                return result(last_content, True, False, rounds, "local_big")
+            history.append(feedback)
         finally:
             set_model_fn(previous)
 
