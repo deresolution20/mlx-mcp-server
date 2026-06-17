@@ -378,6 +378,23 @@ You must add this to `~/.claude/settings.json` — the installer does **NOT** ed
 
 `mlx-offload-hook` is installed on PATH via `uv tool install mlx-mcp-server` (`~/.local/bin`), and it reads oMLX credentials from `~/.claude/settings.json` → `mcpServers.mlx.env`. After adding the hook, restart Claude Code.
 
+### Case-2 live drill
+
+`mlx-case2-drill` fires the hook's infrastructure-failure path (Case 2) for real,
+once, on demand — proving the live recovery works end-to-end. Run it only when
+oMLX is **idle and healthy**; it briefly stops the server.
+
+It pre-checks health (aborts if already down, so it never masks a real outage),
+forces an outage with `omlx stop`, pipes a fixed offloadable prompt into the live
+`mlx-offload-hook`, and asserts: the hook exits 0, injects the PAUSE directive,
+logs exactly one counts-only `infra_error` decision, and that the hook's own
+`omlx restart` brought the server back. If recovery failed, the drill runs
+`omlx start` itself as a backstop and reports **FAIL**.
+
+```bash
+mlx-case2-drill   # exit 0 = PASS, 1 = FAIL, 2 = aborted (oMLX already down)
+```
+
 ---
 
 ## Configuration
