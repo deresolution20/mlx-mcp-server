@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 CALL_LOG_PATH = os.path.expanduser("~/.omlx/mlx-call-log.jsonl")
 DECISIONS_PATH = os.path.expanduser("~/.omlx/hook-decisions.jsonl")
-DECISIONS = {"offloaded", "passthrough", "gate_escalate", "infra_error"}
+DECISIONS = {"offloaded", "passthrough", "gate_escalate", "infra_error", "missed_offload"}
 
 
 def _now():
@@ -46,3 +46,24 @@ def append_decision(decision, category, confidence, *,
         "category": category or "other",
         "confidence": round(float(confidence or 0.0), 3),
     })
+
+
+def decisions_today(date_prefix, *, path=DECISIONS_PATH):
+    """Counts-only {decision: n} for ts starting with date_prefix. Never raises."""
+    out = {}
+    try:
+        with open(path) as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    o = json.loads(line)
+                except ValueError:
+                    continue
+                if str(o.get("ts", "")).startswith(date_prefix):
+                    d = o.get("decision", "")
+                    out[d] = out.get(d, 0) + 1
+    except OSError:
+        pass
+    return out

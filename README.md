@@ -361,6 +361,36 @@ logs exactly one counts-only `infra_error` decision, and that the hook's own
 mlx-case2-drill   # exit 0 = PASS, 1 = FAIL, 2 = aborted (oMLX already down)
 ```
 
+### Offload gate (Phase 2 — assistant's own generation)
+
+The `UserPromptSubmit` hook only sees *your* prompts. The bulk of offloadable work
+is the assistant's own tool-loop generation (code, specs, drafts), which it
+produces on Claude. `mlx-offload-gate` is a **soft** `PreToolUse` hook that flags
+this: when a large code/doc write happens with **nothing offloaded to local that
+turn**, it logs a counts-only `missed_offload` decision and surfaces a gentle
+reminder. **It never blocks or alters the write.** The prompt hook stamps the turn
+boundary (`~/.omlx/turn-state.json`) and, on days with misses, nudges with the
+running tally. The dashboard gains a **Local generation share** panel (local ÷
+local+Claude output tokens) and a **Missed offloads** count.
+
+Wire it manually alongside the offload hook (installer never edits settings):
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "mlx-offload-hook" } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Write|Edit|MultiEdit",
+        "hooks": [ { "type": "command", "command": "mlx-offload-gate" } ] }
+    ]
+  }
+}
+```
+
+After adding it, restart Claude Code.
+
 ---
 
 ## Configuration

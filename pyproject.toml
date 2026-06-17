@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mlx-mcp-server"
-version = "0.4.0"
+version = "0.5.0"
 description = "MCP server bridging Claude to local MLX LM (and any OpenAI-compatible backend)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -19,6 +19,7 @@ dependencies = [
 mlx-mcp-server = "mlx_mcp_server.server:main"
 mlx-offload-hook = "mlx_mcp_server.hook.__main__:main"
 mlx-case2-drill = "mlx_mcp_server.hook.drill:main"
+mlx-offload-gate = "mlx_mcp_server.hook.gate:main"
 
 [project.urls]
 Repository = "https://github.com/deresolution20/mlx-mcp-server"
