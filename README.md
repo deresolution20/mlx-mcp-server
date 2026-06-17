@@ -353,6 +353,33 @@ Install with `--full` or `--with-commands` to get these in `~/.claude/commands/`
 
 ---
 
+## Offload enforcement hook
+
+A `UserPromptSubmit` hook classifies each prompt on the local model and, for offloadable work (summarize, extract, classify, draft, and single-file code), generates the answer locally and injects it as a draft for the assistant to verify — turning the offload policy from advisory into enforced. Logs counts/labels only (never prompt or response text) to `~/.omlx/mlx-call-log.jsonl` and `~/.omlx/hook-decisions.jsonl`.
+
+### Two failure modes
+
+1. **Silent quality gate escalation:** If a local answer fails the quality gate (too short, code doesn't compile), it escalates silently to Claude without injecting a draft.
+2. **Loud infrastructure pause:** If oMLX itself is unreachable (transport error, timeout, non-2xx), the hook runs `omlx restart` and injects a directive telling the assistant to surface the error and PAUSE — never a silent fallback to Claude.
+
+### Wiring it up (manual)
+
+You must add this to `~/.claude/settings.json` — the installer does **NOT** edit settings automatically:
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "mlx-offload-hook" } ] }
+    ]
+  }
+}
+```
+
+`mlx-offload-hook` is installed on PATH via `uv tool install mlx-mcp-server` (`~/.local/bin`), and it reads oMLX credentials from `~/.claude/settings.json` → `mcpServers.mlx.env`. After adding the hook, restart Claude Code.
+
+---
+
 ## Configuration
 
 Set via environment variables, or use the `install` command to write them automatically.
