@@ -26,6 +26,9 @@ subagent, route it through the `iterate` tool first:
   `iterate` runs once and asks you to verify.
 - Always pass a coarse `category` (review / boilerplate / summarize / extract /
   explain / other). Counts only are logged — never content.
+- Exhaust free rungs before paid ones: `iterate` retries locally, and you can
+  pass `big_model` to add one attempt on a bigger LOCAL model before it
+  escalates to Claude — both are free, so prefer them over taking over yourself.
 - Keep on Claude: multi-file reasoning, architecture and judgment calls,
   tool-using work, and the live interactive reply. When `iterate` returns
   ESCALATE, take over.
