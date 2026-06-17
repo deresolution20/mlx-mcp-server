@@ -1,0 +1,27 @@
+suite_version: 1
+category: review
+cases:
+  - id: rv-off-by-one
+    prompt: "Review this and name the bug in one phrase: 'for i in range(len(a)+1): print(a[i])'. Return only the phrase."
+    system_prompt: "You review code precisely."
+    gate:
+      kind: structural
+      regex: "(?i)(index|out of range|off.?by.?one|bounds)"
+  - id: rv-mutable-default
+    prompt: "Review: 'def f(x, acc=[]): acc.append(x); return acc'. Name the issue in one phrase. Return only the phrase."
+    system_prompt: "You review code precisely."
+    gate:
+      kind: structural
+      regex: "(?i)(mutable|default|shared|alias)"
+  - id: rv-sql-injection
+    prompt: "Review: 'cur.execute(\"SELECT * FROM u WHERE n=\" + name)'. Name the vulnerability in one phrase. Return only the phrase."
+    system_prompt: "You review code precisely."
+    gate:
+      kind: structural
+      regex: "(?i)(sql|injection)"
+  - id: rv-resource-leak
+    prompt: "Review: 'f = open(path); data = f.read()'. Name the issue in one phrase. Return only the phrase."
+    system_prompt: "You review code precisely."
+    gate:
+      kind: structural
+      regex: "(?i)(close|leak|context manager|with )"

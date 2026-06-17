@@ -1,0 +1,27 @@
+suite_version: 1
+category: codegen
+cases:
+  - id: cg-fizzbuzz
+    prompt: "Write a Python function fizzbuzz(n) returning a list of strings 1..n with Fizz/Buzz/FizzBuzz rules. Return only code."
+    system_prompt: "You are a concise coding assistant. Return only code."
+    gate:
+      kind: executable
+      check_command: "python3 -c 'import py_compile,sys; py_compile.compile(sys.argv[1], doraise=True)' $CANDIDATE_FILE"
+  - id: cg-is-palindrome
+    prompt: "Write a Python function is_palindrome(s) that ignores case and non-alphanumerics. Return only code."
+    system_prompt: "You are a concise coding assistant. Return only code."
+    gate:
+      kind: executable
+      check_command: "python3 -c 'import py_compile,sys; py_compile.compile(sys.argv[1], doraise=True)' $CANDIDATE_FILE"
+  - id: cg-merge-dicts
+    prompt: "Write a Python function merge(a, b) that returns a new dict with b overriding a. Return only code."
+    system_prompt: "You are a concise coding assistant. Return only code."
+    gate:
+      kind: executable
+      check_command: "python3 -c 'import py_compile,sys; py_compile.compile(sys.argv[1], doraise=True)' $CANDIDATE_FILE"
+  - id: cg-flatten
+    prompt: "Write a Python function flatten(nested) that flattens one level of a list of lists. Return only code."
+    system_prompt: "You are a concise coding assistant. Return only code."
+    gate:
+      kind: executable
+      check_command: "python3 -c 'import py_compile,sys; py_compile.compile(sys.argv[1], doraise=True)' $CANDIDATE_FILE"

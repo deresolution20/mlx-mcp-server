@@ -1,0 +1,27 @@
+suite_version: 1
+category: explain
+cases:
+  - id: exp-list-comp
+    prompt: "Explain what '[x*x for x in range(5)]' produces. Mention the values. Return only the explanation."
+    system_prompt: "You explain code clearly."
+    gate:
+      kind: structural
+      contains: "16"
+  - id: exp-error
+    prompt: "Explain what causes a Python 'KeyError' in one sentence. Return only the sentence."
+    system_prompt: "You explain errors clearly."
+    gate:
+      kind: structural
+      regex: "(?i)key"
+  - id: exp-async
+    prompt: "Explain in one sentence what 'await' does in Python async code. Return only the sentence."
+    system_prompt: "You explain concepts clearly."
+    gate:
+      kind: structural
+      regex: "(?i)(suspend|pause|wait|coroutine|yield)"
+  - id: exp-git-rebase
+    prompt: "Explain in one sentence the difference between git merge and git rebase. Return only the sentence."
+    system_prompt: "You explain concepts clearly."
+    gate:
+      kind: structural
+      regex: "(?i)(history|linear|replay|commit)"

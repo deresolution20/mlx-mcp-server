@@ -26,6 +26,9 @@ packages = ["src/mlx_mcp_server"]
 # hatchling includes all files under the package tree by default,
 # so commands/ and scripts/ subdirectories are automatically bundled.
 
+[tool.hatch.build.targets.wheel.force-include]
+"src/mlx_mcp_server/eval/suite" = "mlx_mcp_server/eval/suite"
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 

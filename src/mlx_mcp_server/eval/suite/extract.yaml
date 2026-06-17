@@ -1,0 +1,29 @@
+suite_version: 1
+category: extract
+cases:
+  - id: ex-emails-json
+    prompt: "Extract all email addresses from 'contact a@x.com or b@y.org' as a JSON object with key \"emails\" (array). Return only JSON."
+    system_prompt: "You return only valid JSON."
+    gate:
+      kind: structural
+      require_json: true
+      schema_keys: ["emails"]
+  - id: ex-version
+    prompt: "Extract the version number from 'Released v2.3.1 on Monday'. Return only the version, e.g. 2.3.1"
+    system_prompt: "You extract precise values."
+    gate:
+      kind: structural
+      regex: "\\d+\\.\\d+\\.\\d+"
+  - id: ex-fields-json
+    prompt: "From 'Name: Ada, Role: Engineer' produce JSON with keys \"name\" and \"role\". Return only JSON."
+    system_prompt: "You return only valid JSON."
+    gate:
+      kind: structural
+      require_json: true
+      schema_keys: ["name", "role"]
+  - id: ex-number
+    prompt: "Extract the dollar amount from 'The invoice total was $4,210.50 due Friday'. Return only the number."
+    system_prompt: "You extract precise values."
+    gate:
+      kind: structural
+      regex: "4,?210\\.50"
