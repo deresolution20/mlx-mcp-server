@@ -12,7 +12,26 @@ from .runtime_config import read_work_hours_guard, write_work_hours_guard
 _config = load_config()
 _client = LLMClient(_config)
 
-mcp = FastMCP("mlx-mcp-server")
+_SERVER_INSTRUCTIONS = """\
+Offload-first policy (token thrift). This server bridges to a LOCAL model that is
+free and private. Before doing eligible work yourself or delegating it to a
+subagent, route it through the `iterate` tool first:
+
+- Offload by default: summarize, extract, classify, reformat; boilerplate and
+  test stubs; single-file or single-function code review; simple refactors;
+  explaining code or errors; first drafts you will polish.
+- Use a gate so the local model can self-correct: structural (require_json /
+  schema_keys / contains / regex / min_len) and/or executable (check_command,
+  which sees the candidate at $CANDIDATE_FILE and exits 0 to pass). With no gate,
+  `iterate` runs once and asks you to verify.
+- Always pass a coarse `category` (review / boilerplate / summarize / extract /
+  explain / other). Counts only are logged — never content.
+- Keep on Claude: multi-file reasoning, architecture and judgment calls,
+  tool-using work, and the live interactive reply. When `iterate` returns
+  ESCALATE, take over.
+"""
+
+mcp = FastMCP("mlx-mcp-server", instructions=_SERVER_INSTRUCTIONS)
 
 import json as _json
 import os as _os
