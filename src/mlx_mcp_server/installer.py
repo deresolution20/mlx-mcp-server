@@ -36,6 +36,10 @@ def _bundled_scripts_dir() -> Path:
     return Path(__file__).parent / "scripts"
 
 
+def _bundled_offload_dir() -> Path:
+    return Path(__file__).parent / "offload"
+
+
 def _atomic_write(dest: Path, content: str) -> None:
     """Write content to dest atomically via a temp file."""
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -171,3 +175,85 @@ def install(
     if not dry_run and (with_commands or with_scripts):
         print()
         print("All done. Type /switch-model in Claude Code to verify.")
+
+
+def _hook_command_entry(command: str) -> dict:
+    return {"hooks": [{"type": "command", "command": command}]}
+
+
+def _entry_has_command(entry: dict, command: str) -> bool:
+    return any(h.get("command") == command for h in entry.get("hooks", []))
+
+
+def install_offload_layer(
+    *,
+    settings_path: Path | None = None,
+    hooks_dir: Path | None = None,
+    skills_dir: Path | None = None,
+    dry_run: bool = False,
+) -> None:
+    """Tier-2 power-up: write the offload hook scripts + /offload skill and
+    register the hooks in Claude Code settings. Idempotent."""
+    src = _bundled_offload_dir()
+    if not src.is_dir():
+        raise RuntimeError(f"Bundled offload directory not found: {src}")
+
+    settings_path = settings_path or _claude_code_config_path()
+    hooks_dir = hooks_dir or (Path.home() / ".claude" / "hooks")
+    skills_dir = skills_dir or (Path.home() / ".claude" / "skills")
+
+    reminder = hooks_dir / "offload-reminder.sh"
+    nudge = hooks_dir / "offload-subagent-nudge.sh"
+
+    if dry_run:
+        print("[dry-run] Would install the offload power-up:")
+        print(f"   hook   → {reminder}")
+        print(f"   hook   → {nudge}")
+        print(f"   skill  → {skills_dir / 'offload' / 'SKILL.md'}")
+        print(f"   register UserPromptSubmit + PreToolUse(Task) hooks → {settings_path}")
+        return
+
+    # 1. Copy hook scripts (executable).
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+    for name in ("offload-reminder.sh", "offload-subagent-nudge.sh"):
+        out = hooks_dir / name
+        _atomic_write(out, (src / "hooks" / name).read_text())
+        out.chmod(out.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        print(f"✅ hook   → {out}")
+
+    # 2. Copy the skill tree.
+    skill_src = src / "skills" / "offload"
+    skill_dest = skills_dir / "offload"
+    skill_dest.mkdir(parents=True, exist_ok=True)
+    for f in skill_src.glob("*"):
+        if f.is_file():
+            _atomic_write(skill_dest / f.name, f.read_text())
+    print(f"✅ skill  → {skill_dest / 'SKILL.md'}")
+
+    # 3. Idempotently register hooks in settings.json.
+    config: dict = {}
+    if settings_path.exists():
+        try:
+            config = json.loads(settings_path.read_text())
+        except json.JSONDecodeError as e:
+            raise SystemExit(
+                f"Existing config at {settings_path} contains invalid JSON: {e}\n"
+                "Fix or remove the file before re-running."
+            ) from None
+
+    hooks = config.setdefault("hooks", {})
+
+    ups = hooks.setdefault("UserPromptSubmit", [])
+    if not any(_entry_has_command(e, str(reminder)) for e in ups):
+        ups.append(_hook_command_entry(str(reminder)))
+
+    pre = hooks.setdefault("PreToolUse", [])
+    task_entries = [e for e in pre if e.get("matcher") == "Task"]
+    if not any(_entry_has_command(e, str(nudge)) for e in task_entries):
+        entry = _hook_command_entry(str(nudge))
+        entry["matcher"] = "Task"
+        pre.append(entry)
+
+    _atomic_write(settings_path, json.dumps(config, indent=2))
+    print(f"✅ hooks registered → {settings_path}")
+    print("   Restart Claude Code to apply.")
