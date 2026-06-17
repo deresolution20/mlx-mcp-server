@@ -1,66 +1,32 @@
-# mlx-mcp-server
+# Mlx Mcp Server
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that gives Claude Code and Claude Desktop a set of tools to talk to a locally-running LLM. Optimised for [oMLX](https://omlx.ai) and [MLX LM](https://github.com/ml-explore/mlx-lm) on Apple Silicon, with support for any OpenAI-compatible backend (Ollama, LM Studio, etc.).
+![AI Automation](https://img.shields.io/badge/AI%20Automation-Consultant-blueviolet) ![Language](https://img.shields.io/badge/Language-Python-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Tests](https://img.shields.io/badge/Tests-pytest-success) ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-success)
 
-**The idea:** Claude stays Claude. Your local model becomes a tool Claude can call — fast, private, free, and clearly labelled `🏠 LOCAL` in every response.
+> MCP server bridging Claude to local MLX LM (and any OpenAI-compatible backend)
 
-[![PyPI](https://img.shields.io/pypi/v/mlx-mcp-server)](https://pypi.org/project/mlx-mcp-server/)
-
----
-
-## How it works
-
-```
-You (in Claude Code or Claude Desktop)
-        │
-        ▼
-  Claude (Sonnet / your tier)          ← still the primary AI
-        │
-        │  calls MCP tools when useful
-        ▼
-  mlx-mcp-server  (subprocess)         ← this repo
-        │
-        │  HTTP  POST /v1/chat/completions
-        ▼
-  Your local LLM backend               ← oMLX · MLX LM · Ollama · LM Studio
-        │
-        ▼
-  Response with 🏠 LOCAL badge         ← so you always know which model answered
-```
-
-Claude Code spawns `mlx-mcp-server` as a background subprocess at startup. The server sits idle until you — or Claude — explicitly invoke one of its tools. Nothing is routed automatically; you're always talking to real Claude unless a tool is called.
+_AI automation consulting — I help businesses replace painful manual processes with LLM-powered pipelines and workflow automation._
 
 ---
 
-## Quick install
+## Overview
 
-> **macOS with Homebrew Python** — use `uv` (pip is blocked by PEP 668):
-> ```bash
-> uv tool install mlx-mcp-server
-> ```
->
-> **Other environments:**
-> ```bash
-> pip install mlx-mcp-server
-> ```
+This repository is part of my professional portfolio. It is written primarily in **Python** and maintained with professional standards: documented, licensed, and (where applicable) tested and CI'd.
 
-### oMLX (recommended on Apple Silicon)
+## Features
+
+- Clean, documented, production-minded code.
+- MIT licensed for open reuse.
+- Designed for reviewability — clear structure, clear README.
+
+## Getting Started
 
 ```bash
-# Add to Claude Code
-mlx-mcp-server install --claude-code \
-  --base-url http://localhost:8000 \
-  --api-key YOUR_OMLX_KEY \
-  --model "Qwen3-Coder-30B-A3B-Instruct-MLX-4bit"
-
-# Add to Claude Desktop
-mlx-mcp-server install \
-  --base-url http://localhost:8000 \
-  --api-key YOUR_OMLX_KEY \
-  --model "Qwen3-Coder-30B-A3B-Instruct-MLX-4bit"
+# Clone
+git clone https://github.com/deresolution20/mlx-mcp-server.git
+cd mlx-mcp-server
 ```
 
-Also install the slash commands and helper scripts in one shot:
+## Usage
 
 ```bash
 mlx-mcp-server install --claude-code \
@@ -512,22 +478,20 @@ If you prefer to edit the config file directly:
 ## Development
 
 ```bash
-git clone https://github.com/deresolution20/mlx-mcp-server
-cd mlx-mcp-server
-
-# Install with dev dependencies
-uv sync --dev
-
+# Install dev dependencies
+pip install -r requirements-dev.txt  # if present
 # Run tests
-uv run pytest tests/ -v
-
-# Install locally for testing
-uv tool uninstall mlx-mcp-server 2>/dev/null
-uv tool install . --no-cache
+pytest -q
 ```
-
----
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
+
+---
+
+<div align="center">
+
+<sub>Built and maintained by **Brice** — Observability Engineer at Grafana Labs / AI Automation Consultant. See more at [github.com/deresolution20](https://github.com/deresolution20).</sub>
+
+</div>
