@@ -21,3 +21,24 @@ def test_append_call_log_swallows_errors(monkeypatch):
     monkeypatch.setattr(server, "_CALL_LOG_PATH", "/nonexistent-dir/xyz/log.jsonl")
     # must not raise — logging is best-effort
     server._append_call_log(model="m", category="c", prompt_tokens=1, completion_tokens=1)
+
+
+def test_append_call_log_records_rounds_and_rung(tmp_path, monkeypatch):
+    log = tmp_path / "mlx-call-log.jsonl"
+    monkeypatch.setattr(server, "_CALL_LOG_PATH", str(log))
+    server._append_call_log(
+        model="m1", category="boilerplate", prompt_tokens=20, completion_tokens=9,
+        rounds=3, winning_rung="local_big",
+    )
+    rec = json.loads(log.read_text().strip().splitlines()[0])
+    assert rec["rounds"] == 3
+    assert rec["winning_rung"] == "local_big"
+
+
+def test_append_call_log_rounds_default(tmp_path, monkeypatch):
+    log = tmp_path / "mlx-call-log.jsonl"
+    monkeypatch.setattr(server, "_CALL_LOG_PATH", str(log))
+    server._append_call_log(model="m", category="other", prompt_tokens=1, completion_tokens=1)
+    rec = json.loads(log.read_text().strip().splitlines()[0])
+    assert rec["rounds"] == 1
+    assert rec["winning_rung"] == "local"

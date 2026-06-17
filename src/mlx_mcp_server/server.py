@@ -19,10 +19,11 @@ from datetime import datetime, timezone
 _CALL_LOG_PATH = _os.path.expanduser("~/.omlx/mlx-call-log.jsonl")
 
 
-def _append_call_log(model, category, prompt_tokens, completion_tokens):
+def _append_call_log(model, category, prompt_tokens, completion_tokens, rounds=1, winning_rung="local"):
     """Append one numeric usage record per offload call. Best-effort; never raises.
 
-    Records counts only — no prompt/response content.
+    Records counts only — no prompt/response content. `rounds` is the number of
+    local attempts made; `winning_rung` is one of local / local_big / escalated.
     """
     rec = {
         "ts": datetime.now(timezone.utc).isoformat(),
@@ -30,6 +31,8 @@ def _append_call_log(model, category, prompt_tokens, completion_tokens):
         "category": category or "other",
         "prompt_tokens": int(prompt_tokens or 0),
         "completion_tokens": int(completion_tokens or 0),
+        "rounds": int(rounds or 1),
+        "winning_rung": winning_rung or "local",
     }
     try:
         _os.makedirs(_os.path.dirname(_CALL_LOG_PATH), exist_ok=True)
