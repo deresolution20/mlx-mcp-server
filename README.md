@@ -6,6 +6,12 @@
 
 _AI automation consulting — I help businesses replace painful manual processes with LLM-powered pipelines and workflow automation._
 
+> **Scope note (v0.6.0):** This is a small MCP server that lets Claude Code call
+> a local MLX model — free and private, handy for grunt work. It is **not** a
+> token-savings product; an earlier attempt to make it one was measured, didn't
+> pay off, and was removed. See [POSTMORTEM.md](POSTMORTEM.md) for the honest
+> accounting.
+
 ---
 
 ## Overview
@@ -33,7 +39,7 @@ mlx-mcp-server install --claude-code \
   --base-url http://localhost:8000 \
   --api-key YOUR_OMLX_KEY \
   --model "Qwen3-Coder-30B-A3B-Instruct-MLX-4bit" \
-  --full
+  --with-commands
 ```
 
 ### MLX LM
@@ -73,7 +79,7 @@ These models were live-tested on an **M5 MacBook Pro (32 GB)** and benchmarked w
 
 The quality tier runs at **~51 tok/s despite 30B parameters** because it's a Mixture of Experts model — only ~3B parameters are active per token. It fits in 18 GB and doesn't activate a thinking chain, making it ideal for subagent use.
 
-**As of v0.2.4 the 30B-A3B is the shipped default.** A 24-case gated eval across six task categories (see [reports](#design--eval-reports) below) found it passes everything at **~0.6 s median latency — as fast as the turbo tier** — so there's no reason to default to a smaller model and escalate. The earlier multi-model "warm pool" scaffolding was dropped: the MoE makes the big model cheap enough to simply be the default.
+**As of v0.2.4 the 30B-A3B is the shipped default.** A gated eval across six task categories (notes archived in [reports](#design--eval-reports) below) found it passes everything at **~0.6 s median latency — as fast as the turbo tier** — so there's no reason to default to a smaller model and escalate. The earlier multi-model "warm pool" scaffolding was dropped: the MoE makes the big model cheap enough to simply be the default. (The eval *harness* itself was removed in v0.6.0 — see [POSTMORTEM.md](POSTMORTEM.md).)
 
 ---
 
@@ -106,7 +112,7 @@ During development, several models were evaluated. Here's what was tested and wh
 - **Avoid thinking models for subagent use.** `Qwen3.6-35B-A3B` and other `/think`-default models spend thousands of tokens reasoning before outputting a single word. Claude already handles the reasoning — your local model just needs to answer.
 - **Benchmark on your hardware.** Published tok/s numbers for Gemma 3 27B QAT diverged significantly from measured M5/32GB performance. Always verify with `quick_test` before committing to a model.
 - **`enable_thinking` payload safety.** The client only sends `enable_thinking: true` when explicitly requested. Sending `enable_thinking: false` unconditionally causes 400 errors on models that don't recognise the field (e.g., Gemma 4). See [#1559](https://github.com/ml-explore/mlx-lm/issues/1559) for the DFlash speculative decoding issue that routes Gemma 4 output to `reasoning_content`.
-- **On bounded work, speed is the differentiator — not quality.** The gated eval harness (`python -m mlx_mcp_server.eval run`) found every coding model passes nearly all easy/medium cases; they separate on latency. The MoE 30B-A3B wins by being top-quality *and* turbo-fast. (Harder cases that separate models on quality are what the Phase-2 capture loop is for.)
+- **On bounded work, speed is the differentiator — not quality.** The gated eval (since retired) found every coding model passes nearly all easy/medium cases; they separate on latency. The MoE 30B-A3B wins by being top-quality *and* turbo-fast.
 - **You can't sweep all models in one engine pool.** Loading the small models first fills the ~24.5 GB pool, so the big ones then return `507 Insufficient Storage`. Evaluate big models in isolation (one ~17 GB model at a time). This warm-pool/eviction limit is a hard constraint for any future auto-ladder selector.
 
 ### Design & eval reports
@@ -155,6 +161,28 @@ Send a message to your local LLM and get a response.
 ---
 Tokens: 12 prompt + 48 completion = 60 total | 1.24s
 ```
+
+---
+
+### `iterate`
+
+Send a task to the local model and let it retry against a gate before handing
+back. Runs a local-first ladder: the active local model retries (feeding the
+gate's failure text back in) up to `max_local_rounds`, then optionally one
+attempt on a bigger local model (`big_model`), then escalates to Claude.
+
+- Structural gates: `require_json`, `schema_keys`, `contains`, `regex`, `min_len`.
+- Executable gate: `check_command` — a shell command that reads the candidate at
+  `$CANDIDATE_FILE` and exits 0 to pass (e.g. `pytest`, `ruff`).
+- No gate → single local attempt, returned for you to verify.
+
+```
+iterate(message="write slugify()", category="boilerplate",
+        check_command="ruff check $CANDIDATE_FILE")
+```
+
+Counts only are logged to `~/.omlx/mlx-call-log.jsonl` (model, category, tokens,
+rounds, winning rung) — never prompt/response content.
 
 ---
 
@@ -277,119 +305,14 @@ set_work_hours_guard(enabled=False)  # off (default)
 
 ---
 
-## Offload-first (token thrift)
-
-This server is built to absorb work that would otherwise spend Claude tokens.
-
-**Tier 1 — portable (zero config).** When the server is connected, it advertises
-an offload-first instructions block, so any agent using it is told to route
-eligible work (summarize, boilerplate, single-file review, extract, explain,
-simple refactors) through the `iterate` tool first, tag a `category`, and keep
-multi-file reasoning + judgment on Claude.
-
-**The `iterate` tool.** Runs a local-first escalation ladder: the active local
-model retries (feeding the gate's failure text back in) up to `max_local_rounds`,
-then optionally one attempt on a bigger local model (`big_model`), then escalates
-to Claude. Provide a gate so retries can improve:
-- Structural: `require_json`, `schema_keys`, `contains`, `regex`, `min_len`.
-- Executable: `check_command` — a shell command that reads the candidate at
-  `$CANDIDATE_FILE` and exits 0 to pass (e.g. `pytest`, `ruff`).
-- No gate → single local attempt, returned for you to verify.
-
-Counts only are logged to `~/.omlx/mlx-call-log.jsonl` (model, category, tokens,
-rounds, winning rung) — never prompt/response content.
-
-**Tier 2 — power-up (one command).** Install Claude Code hooks + an `/offload`
-skill that reinforce the policy:
-
-```bash
-mlx-mcp-server install --claude-code --with-offload   # or --full for everything
-```
-
----
-
 ## Slash commands
 
-Install with `--full` or `--with-commands` to get these in `~/.claude/commands/`:
+Install with `--with-commands` to get these in `~/.claude/commands/`:
 
 | Command | What it does |
 |---------|--------------|
 | `/switch-model` | List available models (queried live from oMLX, so new downloads appear automatically) and switch interactively |
 | `/mlx-help` | Display a live reference card (pulls config via `get_config`) |
-
----
-
-## Offload enforcement hook
-
-A `UserPromptSubmit` hook classifies each prompt on the local model and, for offloadable work (summarize, extract, classify, draft, and single-file code), generates the answer locally and injects it as a draft for the assistant to verify — turning the offload policy from advisory into enforced. Logs counts/labels only (never prompt or response text) to `~/.omlx/mlx-call-log.jsonl` and `~/.omlx/hook-decisions.jsonl`.
-
-### Two failure modes
-
-1. **Silent quality gate escalation:** If a local answer fails the quality gate (too short, code doesn't compile), it escalates silently to Claude without injecting a draft.
-2. **Loud infrastructure pause:** If oMLX itself is unreachable (transport error, timeout, non-2xx), the hook runs `omlx restart` and injects a directive telling the assistant to surface the error and PAUSE — never a silent fallback to Claude.
-
-### Wiring it up (manual)
-
-You must add this to `~/.claude/settings.json` — the installer does **NOT** edit settings automatically:
-
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      { "hooks": [ { "type": "command", "command": "mlx-offload-hook" } ] }
-    ]
-  }
-}
-```
-
-`mlx-offload-hook` is installed on PATH via `uv tool install mlx-mcp-server` (`~/.local/bin`), and it reads oMLX credentials from `~/.claude/settings.json` → `mcpServers.mlx.env`. After adding the hook, restart Claude Code.
-
-### Case-2 live drill
-
-`mlx-case2-drill` fires the hook's infrastructure-failure path (Case 2) for real,
-once, on demand — proving the live recovery works end-to-end. Run it only when
-oMLX is **idle and healthy**; it briefly stops the server.
-
-It pre-checks health (aborts if already down, so it never masks a real outage),
-forces an outage with `omlx stop`, pipes a fixed offloadable prompt into the live
-`mlx-offload-hook`, and asserts: the hook exits 0, injects the PAUSE directive,
-logs exactly one counts-only `infra_error` decision, and that the hook's own
-`omlx restart` brought the server back. If recovery failed, the drill runs
-`omlx start` itself as a backstop and reports **FAIL**.
-
-```bash
-mlx-case2-drill   # exit 0 = PASS, 1 = FAIL, 2 = aborted (oMLX already down)
-```
-
-### Offload gate (Phase 2 — assistant's own generation)
-
-The `UserPromptSubmit` hook only sees *your* prompts. The bulk of offloadable work
-is the assistant's own tool-loop generation (code, specs, drafts), which it
-produces on Claude. `mlx-offload-gate` is a **soft** `PreToolUse` hook that flags
-this: when a large code/doc write happens with **nothing offloaded to local that
-turn**, it logs a counts-only `missed_offload` decision and surfaces a gentle
-reminder. **It never blocks or alters the write.** The prompt hook stamps the turn
-boundary (`~/.omlx/turn-state.json`) and, on days with misses, nudges with the
-running tally. The dashboard gains a **Local generation share** panel (local ÷
-local+Claude output tokens) and a **Missed offloads** count.
-
-Wire it manually alongside the offload hook (installer never edits settings):
-
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      { "hooks": [ { "type": "command", "command": "mlx-offload-hook" } ] }
-    ],
-    "PreToolUse": [
-      { "matcher": "Write|Edit|MultiEdit",
-        "hooks": [ { "type": "command", "command": "mlx-offload-gate" } ] }
-    ]
-  }
-}
-```
-
-After adding it, restart Claude Code.
 
 ---
 
@@ -423,8 +346,6 @@ mlx-mcp-server install [options]
 | `--model NAME` | Model name — optional, auto-detected if omitted |
 | `--api-key KEY` | API key for secured backends |
 | `--with-commands` | Copy slash commands to `~/.claude/commands/` |
-| `--with-scripts` | Copy helper shell scripts to `~/bin/` |
-| `--full` | Shorthand for `--with-commands --with-scripts` |
 | `--dry-run` | Print the config that would be written without touching any files |
 
 **Preview before writing:**
@@ -436,13 +357,13 @@ mlx-mcp-server install --claude-code \
   --dry-run
 ```
 
-**Full install (MCP config + slash commands + scripts):**
+**Install with slash commands (MCP config + `/switch-model`, `/mlx-help`):**
 ```bash
 mlx-mcp-server install --claude-code \
   --base-url http://localhost:8000 \
   --api-key mykey \
   --model "Qwen3-Coder-30B-A3B-Instruct-MLX-4bit" \
-  --full
+  --with-commands
 ```
 
 ---

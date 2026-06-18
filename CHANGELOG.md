@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] — Strip back to the core (the savings experiment is over)
+
+The token-savings layer was measured and didn't pay off (offload ceiling ~$177,
+realized ~$1.25, because 81% of the bill is cache, not generation). Removed the
+machinery; kept the small, honest local-model bridge. See `POSTMORTEM.md`.
+
+### Removed
+- `hook/` — the offload-enforcement layer (`UserPromptSubmit` hook, classifier,
+  generator, prefilter, turnstate, oMLX restart/recovery, Case-2 drill).
+- `eval/` — the gated eval suite + runner.
+- `offload/` — bundled hook scripts + `/offload` skill, and the installer code
+  (`install_offload_layer`) that wired them into `~/.claude/settings.json`.
+- Console scripts: `mlx-offload-hook`, `mlx-offload-gate`, `mlx-case2-drill`
+  (only `mlx-mcp-server` remains).
+- `--with-offload` / `--full` install flags.
+- Net: 44 files / ~2,255 lines deleted; core 2,552 → 1,422 LOC.
+
+### Kept
+- MCP server + 7 tools: `chat`, `iterate` (local-first ladder with self-correcting
+  gates), `quick_test`, `set_model`, `set_work_hours_guard`, `health_check`,
+  `list_models`. 125 tests passing.
+
+### Added
+- `POSTMORTEM.md` — honest accounting of why the savings layer didn't work.
+- README scope note reframing the project as a convenience/privacy tool, not a
+  token-savings product.
+
 ## [0.5.1] — Docs + eval coverage (drafted on the local model)
 
 ### Added

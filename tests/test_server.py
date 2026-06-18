@@ -346,7 +346,6 @@ def test_help_output_covers_all_sections(capsys):
 
     # Install subcommand
     assert "--claude-code" in out
-    assert "--full" in out
     assert "--dry-run" in out
     assert "--with-commands" in out
 

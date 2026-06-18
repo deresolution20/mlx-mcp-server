@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mlx-mcp-server"
-version = "0.5.1"
+version = "0.6.0"
 description = "MCP server bridging Claude to local MLX LM (and any OpenAI-compatible backend)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -17,9 +17,6 @@ dependencies = [
 
 [project.scripts]
 mlx-mcp-server = "mlx_mcp_server.server:main"
-mlx-offload-hook = "mlx_mcp_server.hook.__main__:main"
-mlx-case2-drill = "mlx_mcp_server.hook.drill:main"
-mlx-offload-gate = "mlx_mcp_server.hook.gate:main"
 
 [project.urls]
 Repository = "https://github.com/deresolution20/mlx-mcp-server"
@@ -27,7 +24,7 @@ Repository = "https://github.com/deresolution20/mlx-mcp-server"
 [tool.hatch.build.targets.wheel]
 packages = ["src/mlx_mcp_server"]
 # hatchling includes all files under the package tree by default,
-# so the commands/ and eval/suite/ data subdirectories are bundled automatically.
+# so the commands/ data subdirectory is bundled automatically.
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -37,5 +34,4 @@ dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
     "respx>=0.21",
-    "pyyaml>=6.0",
 ]

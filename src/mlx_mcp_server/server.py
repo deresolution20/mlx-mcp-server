@@ -617,16 +617,6 @@ def main() -> None:
         help="Also install slash commands (/switch-model) to ~/.claude/commands/",
     )
     install_parser.add_argument(
-        "--with-offload",
-        action="store_true",
-        help="Also install the offload-first power-up: Claude Code hooks + /offload skill",
-    )
-    install_parser.add_argument(
-        "--full",
-        action="store_true",
-        help="Equivalent to --with-commands --with-offload; installs everything",
-    )
-    install_parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print the config that would be written without modifying any files",
@@ -641,16 +631,13 @@ def main() -> None:
         from .installer import install
         # Prefer env var over CLI flag so the key doesn't appear in shell history or ps output
         api_key = args.api_key or _os.environ.get("MLX_API_KEY", "")
-        with_commands = args.with_commands or args.full
-        with_offload = args.with_offload or args.full
         install(
             claude_code=args.claude_code,
             base_url=args.base_url,
             model=args.model,
             api_key=api_key,
             dry_run=args.dry_run,
-            with_commands=with_commands,
-            with_offload=with_offload,
+            with_commands=args.with_commands,
         )
     elif args.command == "help":
         _print_help()
@@ -665,10 +652,10 @@ mlx-mcp-server — local LLM bridge for Claude Code
 ===================================================
 
 INSTALL SUBCOMMAND
-  Wire up the MCP server and slash commands in one step.
+  Wire up the MCP server (and optionally slash commands) in one step.
 
   Quick start (recommended):
-    mlx-mcp-server install --claude-code --full
+    mlx-mcp-server install --claude-code --with-commands
 
   Options:
     --claude-code        Target Claude Code (~/.claude/settings.json)
@@ -677,22 +664,20 @@ INSTALL SUBCOMMAND
     --model NAME         Pin a default model  (auto-detected if omitted)
     --api-key KEY        API key for oMLX  (or set MLX_API_KEY env var)
     --with-commands      Install slash commands → ~/.claude/commands/
-    --with-offload       Install offload-first power-up: hooks + /offload skill
-    --full               Install everything (commands + offload)
     --dry-run            Preview what would be written without touching files
 
   Examples:
-    # Full install for Claude Code
-    mlx-mcp-server install --claude-code --full
+    # Install for Claude Code with slash commands
+    mlx-mcp-server install --claude-code --with-commands
 
     # Claude Desktop only, custom URL
     mlx-mcp-server install --base-url http://localhost:8000
 
     # Preview without writing
-    mlx-mcp-server install --claude-code --full --dry-run
+    mlx-mcp-server install --claude-code --with-commands --dry-run
 
     # API key via env var (keeps key out of shell history)
-    MLX_API_KEY=my-key mlx-mcp-server install --claude-code --full
+    MLX_API_KEY=my-key mlx-mcp-server install --claude-code --with-commands
 
 ──────────────────────────────────────────────────────────────
 
