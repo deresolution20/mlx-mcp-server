@@ -16,6 +16,7 @@ GEN_SYS = (
 
 @dataclass
 class GenResult:
+    """A gated local-generation result."""
     status: str  # "ok" | "escalate"
     text: str
     prompt_tokens: int
@@ -23,6 +24,7 @@ class GenResult:
 
 
 def gate_for(category, candidate):
+    """Build a gate function for a given category and candidate."""
     base = structural_gate(candidate, min_len=_MIN_LEN)
     if not base.passed:
         return base

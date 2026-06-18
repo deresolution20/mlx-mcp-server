@@ -1,3 +1,4 @@
+"""Async HTTP client for the MLX/OpenAI-compatible LLM backend."""
 import re
 import time
 from dataclasses import dataclass
@@ -10,6 +11,7 @@ from .runtime_config import read_runtime_model, write_runtime_model
 
 @dataclass
 class ChatResponse:
+    """Represents a chat completion response with content and token usage statistics."""
     content: str
     prompt_tokens: int
     completion_tokens: int
@@ -20,11 +22,14 @@ class ChatResponse:
 
 @dataclass
 class ModelInfo:
+    """Contains information about a single language model."""
     id: str
 
 
 class LLMClient:
+    """An async HTTP client for interacting with MLX/OpenAI-compatible LLM backends."""
     def __init__(self, config: Config) -> None:
+        """Initializes the LLMClient with configuration, setting up the HTTP client and authentication."""
         self.config = config
         # Runtime override: set_model() writes here + to disk; loaded from disk at startup.
         # Priority: _runtime_model > config.default_model (env) > auto-detect.
@@ -143,6 +148,7 @@ class LLMClient:
         top_k: int = 0,
         enable_thinking: bool = False,
     ) -> ChatResponse:
+        """Send a chat message to the LLM and return the response with token counts."""
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -187,12 +193,14 @@ class LLMClient:
         )
 
     async def list_models(self) -> list[ModelInfo]:
+        """Retrieve the list of available models from the backend."""
         resp = await self._http.get("/v1/models")
         resp.raise_for_status()
         return [ModelInfo(id=m["id"]) for m in resp.json().get("data", [])]
 
     async def health_check(self) -> dict:
         # Try /health first — works without auth on oMLX and other backends
+        """Check backend health via /health, falling back to /v1/models; returns a status dict."""
         try:
             resp = await self._http.get("/health", timeout=5.0)
             if resp.status_code == 200:
@@ -232,4 +240,5 @@ class LLMClient:
             }
 
     async def aclose(self) -> None:
+        """Close the underlying httpx client connection."""
         await self._http.aclose()

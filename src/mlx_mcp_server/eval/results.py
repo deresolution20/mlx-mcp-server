@@ -1,3 +1,4 @@
+"""Counts-only results writer and summary aggregation for eval runs."""
 import json
 import statistics
 from dataclasses import asdict

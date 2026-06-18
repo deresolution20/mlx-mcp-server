@@ -1,3 +1,4 @@
+"""Runs eval cases grouped by model, resilient to backend errors."""
 import time
 from dataclasses import dataclass
 
@@ -6,6 +7,7 @@ from .loader import build_gate_fn
 
 @dataclass
 class EvalRecord:
+    """One counts-only eval result record."""
     eval_run_id: str
     ts: float
     model: str

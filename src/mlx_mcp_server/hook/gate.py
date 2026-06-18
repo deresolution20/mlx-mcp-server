@@ -12,6 +12,7 @@ LARGE_CHARS = 1200
 
 
 def written_size(tool_name, tool_input):
+    """Chars a Write/Edit/MultiEdit tool call would write."""
     if not tool_input:
         return 0
     try:
@@ -27,6 +28,7 @@ def written_size(tool_name, tool_input):
 
 
 def category_for(tool_input):
+    """Classify a tool_input as code/docs/other by extension."""
     if not tool_input:
         return "other"
     try:
@@ -41,6 +43,7 @@ def category_for(tool_input):
 
 
 def offloaded_since(ts, *, call_log_path):
+    """Whether any local call was logged at or after a timestamp."""
     if not ts or not call_log_path:
         return False
     try:
@@ -61,6 +64,7 @@ def offloaded_since(ts, *, call_log_path):
 
 
 def evaluate(event, *, started_ts_fn, offloaded_fn, append_decision_fn):
+    """Decide whether a large unoffloaded write should log a missed_offload nudge."""
     try:
         tool_name = event.get("tool_name", "")
         tool_input = event.get("tool_input", {})
@@ -83,6 +87,7 @@ def evaluate(event, *, started_ts_fn, offloaded_fn, append_decision_fn):
 
 
 def main():
+    """Gate entry point: read the PreToolUse event from stdin and emit a decision."""
     try:
         event = json.load(sys.stdin)
     except Exception:  # noqa: BLE001

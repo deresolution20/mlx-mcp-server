@@ -1,3 +1,4 @@
+"""FastMCP server exposing the chat, iterate, and model-management tools."""
 import json
 import re
 from typing import Literal
@@ -233,7 +234,7 @@ async def iterate(
     system_prompt: str = "",
     require_json: bool = False,
     schema_keys: list[str] | None = None,
-    contains: str = "",
+    contains: str | list[str] = "",
     regex: str = "",
     min_len: int = 0,
     check_command: str = "",
@@ -268,9 +269,11 @@ async def iterate(
     has_structural = bool(require_json or schema_keys or contains or regex or min_len)
     if check_command:
         def gate_fn(text):
+            """Closure: apply the configured gate to candidate text."""
             return executable_gate(text, check_command)
     elif has_structural:
         def gate_fn(text):
+            """Closure: apply the configured gate to candidate text."""
             return structural_gate(
                 text,
                 require_json=require_json,
@@ -283,6 +286,7 @@ async def iterate(
         gate_fn = None
 
     async def chat_fn(message, system_prompt=""):
+        """Closure: call the local model for the iterate loop."""
         return await _client.chat(
             message=message,
             system_prompt=system_prompt or _NO_THINK,
@@ -572,6 +576,7 @@ Set `MLX_BASE_URL=http://localhost:11434` and `MLX_DEFAULT_MODEL=mistral`
 
 
 def main() -> None:
+    """MCP server entry point."""
     import argparse
 
     parser = argparse.ArgumentParser(prog="mlx-mcp-server")
@@ -654,6 +659,7 @@ def main() -> None:
 
 
 def _print_help() -> None:
+    """Print CLI help text."""
     print("""
 mlx-mcp-server — local LLM bridge for Claude Code
 ===================================================

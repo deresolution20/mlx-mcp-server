@@ -1,3 +1,4 @@
+"""Structural and executable gates used by the iterate offload loop."""
 import json
 import os
 import re
@@ -8,6 +9,7 @@ from dataclasses import dataclass
 
 @dataclass
 class GateResult:
+    """Whether a gate passed, plus feedback text for a retry."""
     passed: bool
     feedback: str  # error text to feed back into a retry; "" when passed
 
@@ -27,8 +29,12 @@ def structural_gate(
     if min_len and len(stripped) < min_len:
         return GateResult(False, f"output too short: {len(stripped)} < {min_len} chars")
 
-    if contains is not None and contains not in text:
-        return GateResult(False, f"missing required substring: {contains!r}")
+    if contains is not None:
+        needles = [contains] if isinstance(contains, str) else list(contains)
+        missing = [n for n in needles if n not in text]
+        if missing:
+            label = missing[0] if len(missing) == 1 else missing
+            return GateResult(False, f"missing required substring: {label!r}")
 
     if regex and not re.search(regex, text):
         return GateResult(False, f"output did not match regex: {regex}")

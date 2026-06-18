@@ -1,27 +1,51 @@
 suite_version: 1
 category: boilerplate
 cases:
-  - id: bp-pydantic-user
-    prompt: "Write a Python Pydantic v2 model named User with fields id (int), email (str), created (datetime). Return only code, no prose."
-    system_prompt: "You are a concise coding assistant. Return only code."
-    gate:
-      kind: executable
-      check_command: "python3 -c 'import py_compile,sys; py_compile.compile(sys.argv[1], doraise=True)' $CANDIDATE_FILE"
-  - id: bp-argparse
-    prompt: "Write a Python function build_parser() that returns an argparse.ArgumentParser with a required --input string arg and an optional --verbose flag. Return only code."
-    system_prompt: "You are a concise coding assistant. Return only code."
-    gate:
-      kind: executable
-      check_command: "python3 -c 'import py_compile,sys; py_compile.compile(sys.argv[1], doraise=True)' $CANDIDATE_FILE"
-  - id: bp-dockerfile
-    prompt: "Write a minimal Dockerfile for a Python 3.11 app whose entrypoint is `python main.py`. Return only the Dockerfile."
-    system_prompt: "Return only the file contents."
-    gate:
-      kind: structural
-      contains: "FROM python:3.11"
-  - id: bp-pytest-stub
-    prompt: "Write a pytest test stub named test_addition that asserts add(2, 2) == 4. Return only code."
-    system_prompt: "You are a concise coding assistant. Return only code."
-    gate:
-      kind: executable
-      check_command: "python3 -c 'import py_compile,sys; py_compile.compile(sys.argv[1], doraise=True)' $CANDIDATE_FILE"
+- id: bp-pydantic-user
+  prompt: Write a Python Pydantic v2 model named User with fields id (int), email (str), created (datetime). Return only code, no prose.
+  system_prompt: You are a concise coding assistant. Return only code.
+  gate:
+    kind: executable
+    check_command: python3 -c 'import py_compile,sys; py_compile.compile(sys.argv[1], doraise=True)' $CANDIDATE_FILE
+- id: bp-argparse
+  prompt: Write a Python function build_parser() that returns an argparse.ArgumentParser with a required --input string arg and an optional --verbose flag. Return only code.
+  system_prompt: You are a concise coding assistant. Return only code.
+  gate:
+    kind: executable
+    check_command: python3 -c 'import py_compile,sys; py_compile.compile(sys.argv[1], doraise=True)' $CANDIDATE_FILE
+- id: bp-dockerfile
+  prompt: Write a minimal Dockerfile for a Python 3.11 app whose entrypoint is `python main.py`. Return only the Dockerfile.
+  system_prompt: Return only the file contents.
+  gate:
+    kind: structural
+    contains: FROM python:3.11
+- id: bp-pytest-stub
+  prompt: Write a pytest test stub named test_addition that asserts add(2, 2) == 4. Return only code.
+  system_prompt: You are a concise coding assistant. Return only code.
+  gate:
+    kind: executable
+    check_command: python3 -c 'import py_compile,sys; py_compile.compile(sys.argv[1], doraise=True)' $CANDIDATE_FILE
+- id: bp-2-1
+  prompt: Generate a Python class stub for a simple bank account with a balance attribute and a deposit method.
+  system_prompt: Generate a code stub.
+  gate:
+    kind: structural
+    regex: class \w+
+- id: bp-2-2
+  prompt: Create a basic pytest test stub for a function called 'calculate_total'.
+  system_prompt: Generate a test stub.
+  gate:
+    kind: structural
+    regex: def test_\w+
+- id: bp-2-3
+  prompt: Write a simple YAML config with a 'database:' section containing host and port.
+  system_prompt: Generate a config stub.
+  gate:
+    kind: structural
+    regex: 'database:'
+- id: bp-2-4
+  prompt: Generate a minimal HTML template with a title and a body section.
+  system_prompt: Generate a basic HTML stub.
+  gate:
+    kind: structural
+    regex: <html

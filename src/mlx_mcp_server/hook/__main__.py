@@ -13,6 +13,7 @@ from .run import run, _inject
 
 
 def _nudge_text():
+    """Build an end-of-turn nudge string when offloads were missed today."""
     today = datetime.now(timezone.utc).date().isoformat()
     c = logs.decisions_today(today)
     miss, off = c.get("missed_offload", 0), c.get("offloaded", 0)
@@ -24,6 +25,7 @@ def _nudge_text():
 
 
 def main():
+    """Hook entry point: stamp turn-state, classify and offload, inject context."""
     try:
         event = json.load(sys.stdin)
     except Exception:  # noqa: BLE001

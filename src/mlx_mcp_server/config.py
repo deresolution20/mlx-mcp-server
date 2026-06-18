@@ -1,3 +1,4 @@
+"""Server configuration loaded from environment variables."""
 import os
 from dataclasses import dataclass
 from typing import Optional
@@ -5,12 +6,14 @@ from urllib.parse import urlparse
 
 @dataclass(frozen=True)
 class Config:
+    """Server configuration: base_url, api_key, timeout, and default_model."""
     base_url: str
     default_model: str
     api_key: str
     timeout: int
 
 def load_config(env: Optional[dict] = None) -> Config:
+    """Build a Config from environment variables."""
     if env is None:
         env = os.environ
 

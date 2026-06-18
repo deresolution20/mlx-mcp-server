@@ -18,6 +18,7 @@ class OmlxTransportError(Exception):
 
 @dataclass
 class ChatResult:
+    """A local chat call result or transport error."""
     content: str
     prompt_tokens: int
     completion_tokens: int
@@ -39,6 +40,7 @@ def resolve_omlx():
 
 
 def _resolve_model(base_url, api_key):
+    """Pick a model id from the backend; empty string on failure."""
     try:
         m = open(os.path.expanduser("~/.config/mlx-mcp/active_model")).read().strip()
         if m:

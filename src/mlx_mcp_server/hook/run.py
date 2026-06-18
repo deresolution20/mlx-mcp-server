@@ -12,6 +12,7 @@ _EVENT_NAME = "UserPromptSubmit"
 
 @dataclass
 class Deps:
+    """Injectable dependencies for the hook run."""
     resolve: Callable
     classify: Callable
     generate: Callable
@@ -22,6 +23,7 @@ class Deps:
 
 
 def _default_deps():
+    """Construct the real production Deps."""
     return Deps(
         resolve=omlx.resolve_omlx,
         classify=classify_mod.classify,
@@ -34,10 +36,12 @@ def _default_deps():
 
 
 def _inject(text):
+    """Wrap text as a UserPromptSubmit additionalContext JSON payload."""
     return {"hookSpecificOutput": {"hookEventName": _EVENT_NAME, "additionalContext": text}}
 
 
 def _case2(deps, base_url, category):
+    """Handle the oMLX-down Case-2 recovery path."""
     deps.append_decision("infra_error", category, 0.0)
     try:
         outcome = deps.restart(base_url)
@@ -63,6 +67,7 @@ def run(event, *, deps=None):
         base_url, api_key, model = deps.resolve()
 
         def chat(system, user):
+            """Call the local model with a system and user prompt."""
             return omlx.chat(base_url, api_key, model, system, user)
 
         try:

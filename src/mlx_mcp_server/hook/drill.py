@@ -23,6 +23,7 @@ ALLOWED_DECISION_KEYS = {"ts", "decision", "category", "confidence"}
 
 @dataclass
 class DrillResult:
+    """Outcome of the Case-2 live drill."""
     passed: bool
     aborted: bool
     steps: list = field(default_factory=list)
@@ -40,6 +41,7 @@ def extract_context(stdout):
 
 
 def _count_lines(path):
+    """Count lines in a file, 0 if missing."""
     try:
         with open(path) as fh:
             return sum(1 for line in fh if line.strip())
@@ -48,6 +50,7 @@ def _count_lines(path):
 
 
 def _last_obj(path):
+    """Parse and return the last JSON object in a file."""
     try:
         with open(path) as fh:
             lines = [ln for ln in fh.read().splitlines() if ln.strip()]
@@ -133,12 +136,14 @@ def _default_hook_fn(stdin_text):
 
 
 def _exit_code(result):
+    """Map a DrillResult to a process exit code."""
     if result.aborted:
         return 2
     return 0 if result.passed else 1
 
 
 def _print_report(result):
+    """Print a human-readable drill report."""
     print("=== Case-2 live drill ===")
     for name, ok, detail in result.steps:
         print(f"  [{'PASS' if ok else 'FAIL'}] {name}: {detail}")
@@ -150,6 +155,7 @@ def _print_report(result):
 
 
 def main():
+    """Drill entry point."""
     base_url, _api_key, _model = omlx.resolve_omlx()
     result = run_drill(
         base_url,

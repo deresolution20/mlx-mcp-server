@@ -1,3 +1,4 @@
+"""Loads eval cases and builds gate functions from the curated suite."""
 import glob
 import os
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ _STRUCTURAL_KEYS = ("require_json", "schema_keys", "contains", "regex", "min_len
 
 @dataclass
 class EvalCase:
+    """One eval case with its prompt and gate spec."""
     id: str
     category: str
     prompt: str

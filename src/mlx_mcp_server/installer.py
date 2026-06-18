@@ -1,3 +1,4 @@
+"""Installs MCP config, slash commands, and the offload hook layer."""
 import json
 import os
 import platform
@@ -8,6 +9,7 @@ from pathlib import Path
 
 
 def _claude_desktop_config_path() -> Path:
+    """Return the path to the Claude Desktop config file."""
     system = platform.system()
     if system == "Darwin":
         return Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
@@ -25,14 +27,17 @@ def _claude_desktop_config_path() -> Path:
 
 
 def _claude_code_config_path() -> Path:
+    """Return the path to the Claude Code settings file."""
     return Path.home() / ".claude" / "settings.json"
 
 
 def _bundled_commands_dir() -> Path:
+    """Return the path to bundled slash-command files."""
     return Path(__file__).parent / "commands"
 
 
 def _bundled_offload_dir() -> Path:
+    """Return the path to bundled offload hook/skill files."""
     return Path(__file__).parent / "offload"
 
 
@@ -148,10 +153,12 @@ def install(
 
 
 def _hook_command_entry(command: str) -> dict:
+    """Build a settings.json hook entry for a command."""
     return {"hooks": [{"type": "command", "command": command}]}
 
 
 def _entry_has_command(entry: dict, command: str) -> bool:
+    """Whether a hook entry already references a command."""
     return any(h.get("command") == command for h in entry.get("hooks", []))
 
 

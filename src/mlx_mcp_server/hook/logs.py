@@ -9,10 +9,12 @@ DECISIONS = {"offloaded", "passthrough", "gate_escalate", "infra_error", "missed
 
 
 def _now():
+    """Current UTC timestamp as an ISO string."""
     return datetime.now(timezone.utc).isoformat()
 
 
 def _append(path, rec):
+    """Append a JSON record as one line to a file, best-effort."""
     try:
         d = os.path.dirname(path)
         if d:

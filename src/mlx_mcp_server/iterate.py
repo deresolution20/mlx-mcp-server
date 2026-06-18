@@ -1,8 +1,10 @@
+"""Local-first escalation ladder: retry locally, try a bigger local model, then escalate to Claude."""
 from dataclasses import dataclass, field
 
 
 @dataclass
 class IterateResult:
+    """Outcome of an iterate run: content, passed, escalate, rounds, winning rung."""
     content: str
     passed: bool | None  # None = no gate ran; Claude should verify
     escalate: bool
@@ -15,6 +17,7 @@ class IterateResult:
 
 
 def _retry_message(original, feedback):
+    """Compose a retry prompt embedding the gate's failure feedback."""
     return (
         f"{original}\n\n"
         f"Your previous attempt failed this check:\n{feedback}\n\n"
@@ -43,6 +46,7 @@ async def run_iterate(
     last_model = ""
 
     async def attempt(msg):
+        """Run one local model attempt for the given message."""
         nonlocal last_content, last_model
         resp = await chat_fn(message=msg, system_prompt=system_prompt)
         totals["p"] += resp.prompt_tokens
@@ -52,6 +56,7 @@ async def run_iterate(
         return resp
 
     def result(content, passed, escalate, rounds, rung):
+        """Construct an IterateResult."""
         return IterateResult(
             content=content, passed=passed, escalate=escalate, rounds=rounds,
             winning_rung=rung, model=last_model,

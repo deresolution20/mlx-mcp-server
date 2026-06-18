@@ -19,12 +19,14 @@ CLASSIFY_SYS = (
 
 @dataclass
 class Classification:
+    """A prompt's offload decision plus category and confidence."""
     task_type: str
     offloadable: bool
     confidence: float
 
 
 def _coerce(obj):
+    """Normalize a raw model JSON dict into a Classification."""
     if not isinstance(obj, dict):
         return Classification("other", False, 0.0)
     tt = obj.get("task_type")

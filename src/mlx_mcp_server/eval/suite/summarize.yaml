@@ -1,28 +1,53 @@
 suite_version: 1
 category: summarize
 cases:
-  - id: sum-changelog
-    prompt: "Summarize in one sentence: 'We fixed a crash on startup, added dark mode, and improved load time by 30%.' Return only the sentence."
-    system_prompt: "You summarize text concisely."
-    gate:
-      kind: structural
-      min_len: 20
-  - id: sum-json-oneline
-    prompt: "Summarize the following as JSON with a single key \"summary\" (string): 'The release adds OAuth login and removes the legacy API.' Return only JSON."
-    system_prompt: "You return only valid JSON."
-    gate:
-      kind: structural
-      require_json: true
-      schema_keys: ["summary"]
-  - id: sum-bullet
-    prompt: "Summarize as exactly three bullet points starting with '- ': a meeting covering budget, hiring, and the Q3 roadmap. Return only the bullets."
-    system_prompt: "You summarize concisely."
-    gate:
-      kind: structural
-      regex: "(?s)-.*-.*-"
-  - id: sum-tldr
-    prompt: "Give a TL;DR (<=15 words) of: 'The migration moves all services from REST to gRPC over two quarters.' Return only the TL;DR."
-    system_prompt: "You summarize concisely."
-    gate:
-      kind: structural
-      min_len: 10
+- id: sum-changelog
+  prompt: 'Summarize in one sentence: ''We fixed a crash on startup, added dark mode, and improved load time by 30%.'' Return only the sentence.'
+  system_prompt: You summarize text concisely.
+  gate:
+    kind: structural
+    min_len: 20
+- id: sum-json-oneline
+  prompt: 'Summarize the following as JSON with a single key "summary" (string): ''The release adds OAuth login and removes the legacy API.'' Return only JSON.'
+  system_prompt: You return only valid JSON.
+  gate:
+    kind: structural
+    require_json: true
+    schema_keys:
+    - summary
+- id: sum-bullet
+  prompt: 'Summarize as exactly three bullet points starting with ''- '': a meeting covering budget, hiring, and the Q3 roadmap. Return only the bullets.'
+  system_prompt: You summarize concisely.
+  gate:
+    kind: structural
+    regex: (?s)-.*-.*-
+- id: sum-tldr
+  prompt: 'Give a TL;DR (<=15 words) of: ''The migration moves all services from REST to gRPC over two quarters.'' Return only the TL;DR.'
+  system_prompt: You summarize concisely.
+  gate:
+    kind: structural
+    min_len: 10
+- id: sum-2-001
+  prompt: 'Summarize the following text in 3 bullet points starting with ''- '': ''The company launched a new product line targeting millennials. It includes eco-friendly items and is priced competitively. The marketing campaign emphasizes sustainability and innovation.'''
+  system_prompt: Summarize in bullet points.
+  gate:
+    kind: structural
+    regex: (?s)-.*-.*-
+- id: sum-2-002
+  prompt: 'Provide a one-sentence TL;DR of this article: ''Artificial intelligence is revolutionizing healthcare by improving diagnostics and treatment plans. AI-powered tools are now being used in over 500 hospitals worldwide.'' Return only the sentence.'
+  system_prompt: Provide a concise TL;DR.
+  gate:
+    kind: structural
+    min_len: 15
+- id: sum-2-003
+  prompt: 'Condense the following into one short sentence: ''The project timeline was extended by two weeks due to unforeseen technical challenges. The team had to address compatibility issues with older systems and restructure the database.'''
+  system_prompt: Summarize in one short sentence.
+  gate:
+    kind: structural
+    min_len: 15
+- id: sum-2-004
+  prompt: 'Write a two-line summary of the following: ''Climate change is causing rising sea levels, which threaten coastal cities. Adaptation strategies include building sea walls and relocating populations.'''
+  system_prompt: Summarize in two lines.
+  gate:
+    kind: structural
+    min_len: 20

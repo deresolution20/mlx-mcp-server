@@ -7,11 +7,13 @@ from dataclasses import dataclass
 
 @dataclass
 class RestartOutcome:
+    """Result of an oMLX restart attempt."""
     healthy: bool
     detail: str
 
 
 def _default_health(base_url):
+    """Default health probe against a base_url."""
     try:
         with urllib.request.urlopen(base_url.rstrip("/") + "/health", timeout=5) as r:
             return json.loads(r.read().decode()).get("status") == "healthy"

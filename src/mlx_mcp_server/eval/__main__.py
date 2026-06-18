@@ -1,3 +1,4 @@
+"""CLI entry point for running the gated benchmark suite across local models."""
 import argparse
 import asyncio
 import os
@@ -11,14 +12,17 @@ from .results import write_results, summarize
 
 
 def default_suite_dir():
+    """Path to the bundled eval suite directory."""
     return os.path.join(os.path.dirname(__file__), "suite")
 
 
 def _default_out():
+    """Default results output path."""
     return os.path.join(os.path.expanduser("~"), ".omlx", "eval-results.jsonl")
 
 
 async def _run(*, models, suite_dir, out_path, eval_run_id):
+    """Run the eval suite across models and write results."""
     cases = load_suite(suite_dir)
     config = load_config()
     client = LLMClient(config)
@@ -43,6 +47,7 @@ async def _run(*, models, suite_dir, out_path, eval_run_id):
 
 
 def _print_summary(records):
+    """Print an aggregated results summary."""
     summary = summarize(records)
     print(f"\n{'model':<48} {'category':<12} {'pass':>6} {'p50 ms':>8} {'tok':>6}  n")
     for (model, cat), c in sorted(summary.items()):
@@ -51,6 +56,7 @@ def _print_summary(records):
 
 
 def main(argv=None):
+    """Eval CLI entry point."""
     parser = argparse.ArgumentParser(prog="python -m mlx_mcp_server.eval")
     sub = parser.add_subparsers(dest="cmd", required=True)
     run_p = sub.add_parser("run", help="run the eval suite against installed models")

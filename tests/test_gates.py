@@ -18,6 +18,18 @@ def test_structural_contains_fail():
     assert "goodbye" in r.feedback
 
 
+def test_structural_contains_list_all_present():
+    r = structural_gate("alpha beta gamma", contains=["alpha", "gamma"])
+    assert r.passed is True and r.feedback == ""
+
+
+def test_structural_contains_list_reports_only_missing():
+    r = structural_gate("alpha beta", contains=["alpha", "zeta", "omega"])
+    assert r.passed is False
+    assert "zeta" in r.feedback and "omega" in r.feedback
+    assert "alpha" not in r.feedback
+
+
 def test_structural_regex_pass_and_fail():
     assert structural_gate("id=42", regex=r"id=\d+").passed is True
     bad = structural_gate("id=x", regex=r"id=\d+")
