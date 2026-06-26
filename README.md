@@ -14,9 +14,13 @@ This repository is part of my professional portfolio. It is written primarily in
 
 ## Features
 
-- Clean, documented, production-minded code.
-- MIT licensed for open reuse.
-- Designed for reviewability — clear structure, clear README.
+- **Offload-first, token-thrift** — routes eligible work (summarize, extract, classify, boilerplate, single-file review, first drafts) to a free, private local model before spending paid Claude tokens.
+- **Self-correcting `iterate` ladder** — retries locally, then a bigger local model, then escalates to Claude; free rungs are exhausted before any paid work.
+- **Gated retries** — structural gates (`require_json` / `schema_keys` / `contains` / `regex` / `min_len`) and an executable gate (run a linter or test against `$CANDIDATE_FILE`) let the local model fix its own output.
+- **Runtime model switching** — swap the active model by name or fuzzy fragment with no Claude restart; choice persists across restarts.
+- **Work-hours guard** — optionally blocks large (>22 GB RAM) models during work hours to avoid swap thrashing.
+- **One-step install** — wires the MCP server and slash commands (`/switch-model`, `/mlx-help`) into Claude Code or Claude Desktop.
+- **Backend-agnostic** — works with MLX LM or any OpenAI-compatible `/v1` endpoint; content-free usage metrics, MIT licensed, tested and CI'd.
 
 ## Getting Started
 
