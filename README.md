@@ -20,11 +20,14 @@ This repository is part of my professional portfolio. It is written primarily in
 
 ## Getting Started
 
+Requires Python 3.11+ and a running OpenAI-compatible LLM backend (MLX LM on Apple Silicon is recommended).
+
 ```bash
-# Clone
-git clone https://github.com/deresolution20/mlx-mcp-server.git
-cd mlx-mcp-server
+pip install mlx-mcp-server
+mlx-mcp-server install --claude-code --with-commands   # wire into Claude Code, then restart Claude
 ```
+
+See [Usage](#usage) for backend setup, configuration, and the full tool reference.
 
 ## Usage
 
