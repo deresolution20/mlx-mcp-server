@@ -28,8 +28,88 @@ cd mlx-mcp-server
 
 ## Usage
 
-<!-- Describe how to use mlx-mcp-server. -->
-See the source for details; this README is a professional scaffold and will be expanded with project-specific usage.
+### 1. Start a local LLM backend
+
+The server talks to any OpenAI-compatible `/v1` endpoint. On Apple Silicon, [MLX LM](https://github.com/ml-explore/mlx-lm) is recommended:
+
+```bash
+pip install mlx-lm
+mlx_lm.server --model mlx-community/Qwen2.5-Coder-14B-Instruct-4bit   # serves on http://localhost:8080
+```
+
+Any other OpenAI-compatible backend works too (e.g. Ollama on Linux/Intel — point `MLX_BASE_URL` at `http://localhost:11434`).
+
+### 2. Install and wire it into Claude
+
+```bash
+pip install mlx-mcp-server
+
+# One-step setup for Claude Code (also installs the /switch-model + /mlx-help slash commands)
+mlx-mcp-server install --claude-code --with-commands
+
+# ...or Claude Desktop
+mlx-mcp-server install --with-commands
+
+# Preview the config without writing anything
+mlx-mcp-server install --claude-code --dry-run
+```
+
+The installer writes an `mlx` entry into your Claude config (`~/.claude/settings.json` for Claude Code, or the Claude Desktop config). **Restart Claude afterward** to load the server. Verify the backend is reachable with the `health_check` tool, or run `mlx-mcp-server help` for the full CLI reference.
+
+### 3. How Claude uses it — offload-first
+
+The whole point is **token thrift**: Claude routes eligible work (summarize, extract, classify, reformat, boilerplate, single-file review, simple refactors, first drafts) to your free, private local model before spending paid tokens. The headline tool is `iterate`, which runs a self-correcting escalation ladder:
+
+> **local model retries** (feeding each gate failure back in) → **a bigger local model** → **escalate to Claude**
+
+Free rungs are exhausted before any paid work happens. You attach a **gate** so the local model can self-correct:
+
+- **Structural gates** (cheap, content-free): `require_json`, `schema_keys`, `contains`, `regex`, `min_len`
+- **Executable gate**: `check_command` — a shell command that sees the candidate at `$CANDIDATE_FILE` and exits `0` to pass (e.g. a linter or test)
+
+With no gate, `iterate` runs a single local attempt and asks Claude to verify.
+
+```text
+# Generate boilerplate, gated by a linter — retries locally until ruff is happy
+iterate(message="write a Python slugify() function",
+        category="boilerplate",
+        check_command="ruff check $CANDIDATE_FILE")
+
+# Extract structured data, gated on valid JSON with required keys
+iterate(message="extract name, email, company from this signature: ...",
+        category="extract",
+        require_json=true,
+        schema_keys=["name", "email", "company"])
+
+# Quick one-off to the local model, no iteration
+chat(message="explain what this regex does: ^\\d{3}-\\d{4}$")
+```
+
+### Tools
+
+| Tool | What it does |
+|------|--------------|
+| `iterate` | Offload a task with a gate; retries locally, then a bigger local model, then escalates to Claude |
+| `chat` | Send a single prompt to the local model and get the response + token usage |
+| `quick_test` | Run a canned diagnostic (`hello` / `math` / `creative` / `code_review`) to sanity-check the model |
+| `list_models` | List loaded models with speed/quality descriptions and the active marker |
+| `set_model` | Switch the active model at runtime by name or fuzzy fragment — no restart needed |
+| `health_check` | Confirm the backend is reachable |
+| `set_work_hours_guard` | Block large (>22 GB RAM) models Mon–Fri 8am–5pm MT to avoid swap thrashing |
+| `get_config` | Show current config (URL, active model, guard state) — resource `config://settings` |
+
+Inside Claude Code, the bundled slash commands give you `/switch-model` (interactive model picker) and `/mlx-help` (this reference).
+
+### Configuration
+
+Set as env vars in the MCP server entry (the installer scaffolds these):
+
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `MLX_BASE_URL` | `http://localhost:8080` | Backend `/v1` URL |
+| `MLX_DEFAULT_MODEL` | _(empty)_ | Optional — auto-detected from `/v1/models` if unset |
+| `MLX_API_KEY` | _(empty)_ | Optional, for secured backends |
+| `MLX_TIMEOUT` | `30` | Request timeout in seconds |
 
 ## Development
 
