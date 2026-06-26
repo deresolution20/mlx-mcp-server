@@ -10,7 +10,9 @@ _AI automation consulting — I help businesses replace painful manual processes
 
 ## Overview
 
-This repository is part of my professional portfolio. It is written primarily in **Python** and maintained with professional standards: documented, licensed, and (where applicable) tested and CI'd.
+`mlx-mcp-server` is a [Model Context Protocol](https://modelcontextprotocol.io) server that bridges Claude to a **local** LLM (MLX LM on Apple Silicon, or any OpenAI-compatible `/v1` backend) so Claude can hand off eligible work to a free, private model instead of spending paid tokens.
+
+Rather than a plain pass-through, it enforces an **offload-first** policy: its headline `iterate` tool runs a self-correcting escalation ladder — retry locally against a gate, step up to a bigger local model, and only escalate to Claude when the local rungs are exhausted. The result is lower token cost and more privacy for routine work (summarizing, extracting, classifying, boilerplate, single-file review), while Claude stays focused on multi-file reasoning and judgment calls.
 
 ## Features
 
