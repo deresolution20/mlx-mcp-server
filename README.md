@@ -1,6 +1,10 @@
 # Mlx Mcp Server
 
-![AI Automation](https://img.shields.io/badge/AI%20Automation-Consultant-blueviolet) ![Language](https://img.shields.io/badge/Language-Python-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Tests](https://img.shields.io/badge/Tests-pytest-success) ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-success)
+[![PyPI version](https://img.shields.io/pypi/v/mlx-mcp-server.svg)](https://pypi.org/project/mlx-mcp-server/)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://pypi.org/project/mlx-mcp-server/)
+[![License: MIT](https://img.shields.io/github/license/deresolution20/mlx-mcp-server.svg)](https://github.com/deresolution20/mlx-mcp-server/blob/main/LICENSE)
+[![Publish to PyPI](https://github.com/deresolution20/mlx-mcp-server/actions/workflows/publish.yml/badge.svg)](https://github.com/deresolution20/mlx-mcp-server/actions/workflows/publish.yml)
+[![AI Automation Consultant](https://img.shields.io/badge/AI%20Automation-Consultant-blueviolet)](https://github.com/deresolution20)
 
 > MCP server bridging Claude to local MLX LM (and any OpenAI-compatible backend)
 
